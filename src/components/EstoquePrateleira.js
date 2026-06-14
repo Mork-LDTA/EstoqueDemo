@@ -16,6 +16,7 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
   // Estados de busca e filtros
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFamily, setSelectedFamily] = useState("all");
+  const [selectedShelf, setSelectedShelf] = useState("all");
   
   // Controle do Painel Lateral (Drawer) de Prateleira
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -28,6 +29,13 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
   // Obter famílias únicas para o seletor de filtros
   const families = ["all", ...new Set(products.map(p => p.familia).filter(Boolean))];
 
+  // Obter prateleiras únicas (ex: "P1" de "P1-A1")
+  const shelves = ["all", ...new Set(products.map(p => {
+    if (!p.localizacao) return null;
+    const parts = p.localizacao.split("-");
+    return parts[0].trim();
+  }).filter(Boolean))];
+
   // Filtragem dinâmica de produtos
   const filteredProducts = products.filter(p => {
     const matchesSearch = 
@@ -39,7 +47,11 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
 
     const matchesFamily = selectedFamily === "all" || p.familia === selectedFamily;
 
-    return matchesSearch && matchesFamily;
+    const matchesShelf = 
+      selectedShelf === "all" || 
+      (p.localizacao && p.localizacao.toLowerCase().startsWith(selectedShelf.toLowerCase()));
+
+    return matchesSearch && matchesFamily && matchesShelf;
   });
 
   // Atualizar a localização de um produto pelo clique no quadrante
@@ -102,11 +114,27 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Pesquisar por Descrição, Marca, Código ou Localização..."
+            placeholder="Pesquisar por Descrição, Marca, Código..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-gray-50 border border-gray-200 text-gray-950 pl-11 pr-4 py-2.5 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white transition-colors"
           />
+        </div>
+
+        {/* Novo Filtro de Prateleira (Tema Escuro) */}
+        <div className="w-full md:w-64 flex items-center space-x-2">
+          <select
+            value={selectedShelf}
+            onChange={(e) => setSelectedShelf(e.target.value)}
+            className="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-orange-500"
+          >
+            <option value="all">TODAS AS PRATELEIRAS</option>
+            {shelves.filter(s => s !== "all").map(shelf => (
+              <option key={shelf} value={shelf}>
+                PRATELEIRA {shelf.toUpperCase()}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Filtro por Família */}
@@ -145,7 +173,7 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
             {filteredProducts.length === 0 ? (
               <div className="text-center py-20 text-gray-500 flex flex-col items-center justify-center space-y-2">
                 <Package size={44} className="text-gray-300" />
-                <p className="font-medium">Nenhum produto cadastrado corresponde aos filtros.</p>
+                <p className="font-medium uppercase tracking-wider text-xs">NENHUM PRODUTO ENCONTRADO NESTA PRATELEIRA</p>
               </div>
             ) : (
               <table className="w-full text-left text-sm border-collapse">

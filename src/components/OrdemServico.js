@@ -370,7 +370,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
             <div className="bg-gray-50 border border-gray-150 p-3 rounded-lg flex items-center justify-between text-xs text-gray-500">
               <span className="flex items-center space-x-1 font-medium">
                 <Calendar size={13} className="text-gray-400" />
-                <span>Data/Hora da OS (Automática):</span>
+                <span>Data/Hora da OS(Automática):</span>
               </span>
               <span className="font-bold text-gray-700 font-mono">
                 {new Date().toLocaleString()}

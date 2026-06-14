@@ -19,6 +19,7 @@ export default function CadastroManual({ products, setProducts, movements, setMo
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [tempProduct, setTempProduct] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState("");
+  const [prateleiraAtiva, setPrateleiraAtiva] = useState("P1");
 
   // Grid variables (5 Rows A-E, 3 Columns 1-3)
   const rows = ["A", "B", "C", "D", "E"];
@@ -78,7 +79,9 @@ export default function CadastroManual({ products, setProducts, movements, setMo
           quantidade: Number(quantidade)
         };
         setTempProduct(tempProd);
-        setSelectedLocation("P1-A1");
+        const initialLocation = existingProduct.localizacao || "P1-A1";
+        setSelectedLocation(initialLocation);
+        setPrateleiraAtiva(initialLocation.split("-")[0] || "P1");
         setShowLocationModal(true);
         return;
       }
@@ -101,7 +104,19 @@ export default function CadastroManual({ products, setProducts, movements, setMo
 
     setTempProduct(newProd);
     setSelectedLocation("P1-A1");
+    setPrateleiraAtiva("P1");
     setShowLocationModal(true);
+  };
+
+  // Alternar prateleiras e remapear código no modal
+  const handleShelfChange = (newShelf) => {
+    setPrateleiraAtiva(newShelf);
+    if (selectedLocation) {
+      const parts = selectedLocation.split("-");
+      if (parts.length > 1) {
+        setSelectedLocation(`${newShelf}-${parts[1]}`);
+      }
+    }
   };
 
   const handleSalvarLocalizacao = () => {
@@ -311,31 +326,49 @@ export default function CadastroManual({ products, setProducts, movements, setMo
                   <span>Selecione a Posição Física na Prateleira</span>
                 </span>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  Clique em um dos quadrantes abaixo para alocar o item no almoxarifado. A nomenclatura de localização segue o padrão <span className="font-semibold text-gray-800">P1-[Linha][Coluna]</span>.
+                  Defina o quadrante no almoxarifado para este produto.
                 </p>
+              </div>
+
+              {/* Seletor de Estrutura Multi-Prateleiras */}
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => handleShelfChange("P1")}
+                  className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-colors border ${
+                    prateleiraAtiva === "P1"
+                      ? "bg-gray-950 text-orange-500 border-gray-950 shadow-sm"
+                      : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  Prateleira P1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleShelfChange("P2")}
+                  className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-colors border ${
+                    prateleiraAtiva === "P2"
+                      ? "bg-gray-950 text-orange-500 border-gray-950 shadow-sm"
+                      : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  Prateleira P2
+                </button>
               </div>
 
               {/* Grid 5x3 Visualizer */}
               <div className="bg-gray-100 border border-gray-200 rounded-xl p-5 shadow-inner">
                 <div className="grid grid-cols-4 gap-2 text-center items-center">
-                  
-                  {/* Canto superior esquerdo em branco */}
-                  <div className="text-[10px] font-bold text-gray-400 uppercase">Prateleira P1</div>
-                  
-                  {/* Cabeçalho de Colunas */}
+                  <div className="text-[10px] font-bold text-gray-400 uppercase">Prateleira {prateleiraAtiva}</div>
                   {cols.map(c => (
                     <div key={c} className="text-xs font-bold text-gray-600">Coluna {c}</div>
                   ))}
 
-                  {/* Renderizando as linhas e quadrantes */}
                   {rows.map(r => (
                     <React.Fragment key={r}>
-                      {/* Indicador de Linha */}
                       <div className="text-xs font-bold text-gray-600">Linha {r}</div>
-                      
-                      {/* Quadrantes da linha */}
                       {cols.map(c => {
-                        const locCode = `P1-${r}${c}`;
+                        const locCode = `${prateleiraAtiva}-${r}${c}`;
                         const isSelected = selectedLocation === locCode;
 
                         return (

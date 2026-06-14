@@ -25,6 +25,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
   const [activeItemIndex, setActiveItemIndex] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [notasProcessadas, setNotasProcessadas] = useState([]);
+  const [prateleiraAtiva, setPrateleiraAtiva] = useState("P1");
 
   // Grid de Prateleira (5 Linhas A-E, 3 Colunas 1-3)
   const rows = ["A", "B", "C", "D", "E"];
@@ -145,8 +146,25 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
     
     // Se o item já existia no estoque global e já tinha posição física, sugere a mesma
     const itemEstoque = products.find(p => p.codProduto.trim().toLowerCase() === item.codProduto.trim().toLowerCase());
-    setSelectedLocation(itemEstoque?.localizacao || "P1-A1");
+    const initialLocation = itemEstoque?.localizacao || "P1-A1";
+    setSelectedLocation(initialLocation);
+    
+    // Define active shelf based on the initial location prefix
+    const shelfPrefix = initialLocation.split("-")[0] || "P1";
+    setPrateleiraAtiva(shelfPrefix);
+    
     setShowLocationModal(true);
+  };
+
+  // Alternar prateleiras e remapear código no modal
+  const handleShelfChange = (newShelf) => {
+    setPrateleiraAtiva(newShelf);
+    if (selectedLocation) {
+      const parts = selectedLocation.split("-");
+      if (parts.length > 1) {
+        setSelectedLocation(`${newShelf}-${parts[1]}`);
+      }
+    }
   };
 
   // Salva a localização temporariamente na fila de conferência
@@ -412,14 +430,40 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
                   <span>Selecione a Posição Física na Prateleira</span>
                 </span>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  Defina o quadrante no almoxarifado para as <span className="font-bold text-gray-800">{itemsFila[activeItemIndex].quantidade} unidades</span> deste produto. O padrão segue a estrutura <span className="font-semibold text-gray-800">P1-[Linha][Coluna]</span>.
+                  Defina o quadrante no almoxarifado para as <span className="font-bold text-gray-800">{itemsFila[activeItemIndex].quantidade} unidades</span> deste produto.
                 </p>
+              </div>
+
+              {/* Seletor de Estrutura Multi-Prateleiras */}
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => handleShelfChange("P1")}
+                  className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-colors border ${
+                    prateleiraAtiva === "P1"
+                      ? "bg-gray-950 text-orange-500 border-gray-950 shadow-sm"
+                      : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  Prateleira P1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleShelfChange("P2")}
+                  className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-colors border ${
+                    prateleiraAtiva === "P2"
+                      ? "bg-gray-950 text-orange-500 border-gray-950 shadow-sm"
+                      : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  Prateleira P2
+                </button>
               </div>
 
               {/* Grid 5x3 Visualizer */}
               <div className="bg-gray-100 border border-gray-200 rounded-xl p-5 shadow-inner">
                 <div className="grid grid-cols-4 gap-2 text-center items-center">
-                  <div className="text-[10px] font-bold text-gray-400 uppercase">Prateleira P1</div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase">Prateleira {prateleiraAtiva}</div>
                   {cols.map(c => (
                     <div key={c} className="text-xs font-bold text-gray-600">Coluna {c}</div>
                   ))}
@@ -428,7 +472,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
                     <React.Fragment key={r}>
                       <div className="text-xs font-bold text-gray-600">Linha {r}</div>
                       {cols.map(c => {
-                        const locCode = `P1-${r}${c}`;
+                        const locCode = `${prateleiraAtiva}-${r}${c}`;
                         const isSelected = selectedLocation === locCode;
 
                         return (

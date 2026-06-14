@@ -31,26 +31,109 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
 
   // Mecanismo de Simulação (Mock)
   const handlePuxarDados = () => {
-    setErrorMsg("");
-    const trimmedChave = chaveNf.trim();
-    if (trimmedChave === "35260600012345678901234567890123456789012345") {
-      setDescricao("Rolamento");
-      setMarca("TIMKEN");
-      setCodProduto("6205-2RS");
-      setFamilia("Peças");
-      setIsFetched(true);
-    } else if (trimmedChave.length === 44 && /^\d+$/.test(trimmedChave)) {
-      // Se for uma chave válida de 44 dígitos, simula preenchimento aleatório estruturado
-      setDescricao("Retentor Nitrílico Industrial");
-      setMarca("SABÓ");
-      setCodProduto("9102-AR");
-      setFamilia("Retentores");
-      setIsFetched(true);
-    } else {
-      setErrorMsg("A chave de NF precisa conter exatamente 44 dígitos numéricos.");
-      setIsFetched(false);
-    }
-  };
+      setErrorMsg("");
+      const trimmedChave = chaveNf.trim();
+
+      // Dicionário de Mocks específicos para manutenção de Caminhões da Construtora
+      const bancoNotasFiscais = {
+        // ITEM 1: Filtro Separador de Água (Essencial para diesel de canteiro de obras)
+        "35260612345678000199550010000011111234567891": {
+          descricao: "Filtro Separador de Combustível (Racor)",
+          marca: "PARKER",
+          codProduto: "R90-P",
+          familia: "Filtros"
+        },
+        "1111": { // Atalho rápido para digitação no Pitch
+          descricao: "Filtro Separador de Combustível (Racor)",
+          marca: "PARKER",
+          codProduto: "R90-P",
+          familia: "Filtros"
+        },
+
+        // ITEM 2: Sistema de Freios de alta rodagem
+        "35260612345678000199550010000022221234567892": {
+          descricao: "Jogo de Pastilhas de Freio Dianteira (Truck)",
+          marca: "FRAS-LE",
+          codProduto: "PD-522",
+          familia: "Freios"
+        },
+        "2222": {
+          descricao: "Jogo de Pastilhas de Freio Dianteira (Truck)",
+          marca: "FRAS-LE",
+          codProduto: "PD-522",
+          familia: "Freios"
+        },
+
+        // ITEM 3: Suspensão Pesada para estradas de terra/obras
+        "35260612345678000199550010000033331234567893": {
+          descricao: "Mola Pneumática da Cabine (Bolsão)",
+          marca: "GOODYEAR",
+          codProduto: "1T15R-6",
+          familia: "Suspensão"
+        },
+        "3333": {
+          descricao: "Mola Pneumática da Cabine (Bolsão)",
+          marca: "GOODYEAR",
+          codProduto: "1T15R-6",
+          familia: "Suspensão"
+        },
+
+        // ITEM 4: Sistema de Injeção de Motores a Diesel
+        "35260612345678000199550010000044441234567894": {
+          descricao: "Bico Injetor Common Rail Sistema CRDI",
+          marca: "BOSCH",
+          codProduto: "0445120007",
+          familia: "Motor"
+        },
+        "4444": {
+          descricao: "Bico Injetor Common Rail Sistema CRDI",
+          marca: "BOSCH",
+          codProduto: "0445120007",
+          familia: "Motor"
+        },
+
+        // ITEM 5: Correias de Transmissão do Alternador
+        "35260612345678000199550010000055551234567895": {
+          descricao: "Correia do Alternador Poly-V 8PK1635",
+          marca: "GATES",
+          codProduto: "8PK1635",
+          familia: "Correias"
+        },
+        "5555": {
+          descricao: "Correia do Alternador Poly-V 8PK1635",
+          marca: "GATES",
+          codProduto: "8PK1635",
+          familia: "Correias"
+        },
+
+        // O item de rolamento padrão original que você já possuía
+        "35260600012345678901234567890123456789012345": {
+          descricao: "Rolamento de Roda Traseira",
+          marca: "TIMKEN",
+          codProduto: "6205-2RS",
+          familia: "Peças"
+        }
+      };
+
+      // Fluxo lógico de validação e preenchimento
+      if (bancoNotasFiscais[trimmedChave]) {
+        setDescricao(bancoNotasFiscais[trimmedChave].descricao);
+        setMarca(bancoNotasFiscais[trimmedChave].marca);
+        setCodProduto(bancoNotasFiscais[trimmedChave].codProduto);
+        setFamilia(bancoNotasFiscais[trimmedChave].familia);
+        setIsFetched(true);
+      } else if (trimmedChave.length === 44 && /^\d+$/.test(trimmedChave)) {
+        // Comportamento padrão caso usem qualquer outra chave de 44 dígitos numéricos válida
+        setDescricao("Retentor Nitrílico de Cubo de Roda");
+        setMarca("SABÓ");
+        setCodProduto("9102-AR");
+        setFamilia("Retentores");
+        setIsFetched(true);
+      } else {
+        setErrorMsg("Chave de teste não localizada. Use chaves reais ou os atalhos: 1111, 2222, 3333, 4444 ou 5555.");
+        setIsFetched(false);
+      }
+    };
 
   // Confirmar Entrada
   const handleConfirmarEntrada = (e) => {

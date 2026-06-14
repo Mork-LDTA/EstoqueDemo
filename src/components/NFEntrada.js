@@ -4,25 +4,25 @@ import {
   Search, 
   CheckCircle2, 
   MapPin, 
-  AlertCircle 
+  AlertCircle,
+  Package,
+  Layers
 } from "lucide-react";
 
 export default function NFEntrada({ products, setProducts, movements, setMovements }) {
-  // Estado do formulário
+  // Estado da chave da Nota Fiscal
   const [chaveNf, setChaveNf] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [marca, setMarca] = useState("");
-  const [codProduto, setCodProduto] = useState("");
-  const [familia, setFamilia] = useState("");
-  const [quantidade, setQuantidade] = useState(5);
+  
+  // Fila de itens extraídos da NF atual que aguardam triagem/alocação
+  const [itemsFila, setItemsFila] = useState([]);
   
   // Feedback e Controle de Modais
   const [isFetched, setIsFetched] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showLocationModal, setShowLocationModal] = useState(false);
   
-  // Produto recém cadastrado que aguarda localização
-  const [tempProduct, setTempProduct] = useState(null);
+  // Item específico da fila que está passando pela triagem no momento
+  const [activeItemIndex, setActiveItemIndex] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [notasProcessadas, setNotasProcessadas] = useState([]);
 
@@ -30,281 +30,206 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
   const rows = ["A", "B", "C", "D", "E"];
   const cols = ["1", "2", "3"];
 
-  // Mecanismo de Simulação (Mock)
+  // Mecanismo de Simulação (Mock de Notas Fiscais com múltiplos itens)
   const handlePuxarDados = () => {
     setErrorMsg("");
     const trimmedChave = chaveNf.trim();
 
-    // Dicionário de Mocks específicos para manutenção de Caminhões da Construtora
+    if (notasProcessadas.includes(trimmedChave)) {
+      setErrorMsg("Bloqueio Fiscal: Esta Nota Fiscal já foi lançada no sistema e não pode ser reprocessada!");
+      return;
+    }
+
+    // Dicionário de Mocks simulando lotes reais de entrega com mais de 1 item por NF
     const bancoNotasFiscais = {
-      // ITEM 1: Filtro Separador de Água (Essencial para diesel de canteiro de obras)
-      "35260612345678000199550010000011111234567891": {
+      // LOTEPADRÃO: Simulação completa contendo 3 itens distintos para a manutenção
+       "3526061234567800019955001000004444123456794": [{ // Atalho rápido para digitação no Pitch
         descricao: "Filtro Separador de Combustível (Racor)",
         marca: "PARKER",
         codProduto: "R90-P",
-        familia: "Filtros"
-      },
-      "35260612345678000199550010000044441234566794": { // Atalho rápido para digitação no Pitch
-        descricao: "Filtro Separador de Combustível (Racor)",
-        marca: "PARKER",
-        codProduto: "R90-P",
-        familia: "Filtros"
-      },
+        familia: "Filtros",
+        quantidade: 15,
+        localizacao: "",
+        alocado: false
+      }],
 
-      // ITEM 2: Sistema de Freios de alta rodagem
-      "35260612345678000199550010000022221234567892": {
-        descricao: "Jogo de Pastilhas de Freio Dianteira (Truck)",
-        marca: "FRAS-LE",
-        codProduto: "PD-522",
-        familia: "Freios"
-      },
-      "35260612345678000199550010000044441234567943": {
-        descricao: "Jogo de Pastilhas de Freio Dianteira (Truck)",
-        marca: "FRAS-LE",
-        codProduto: "PD-522",
-        familia: "Freios"
-      },
-
-      // ITEM 3: Suspensão Pesada para estradas de terra/obras
-      "35260612345678000199550010000033331234567893": {
-        descricao: "Mola Pneumática da Cabine (Bolsão)",
-        marca: "GOODYEAR",
-        codProduto: "1T15R-6",
-        familia: "Suspensão"
-      },
-      "35260612345678000199550010000044441234567453": {
-        descricao: "Mola Pneumática da Cabine (Bolsão)",
-        marca: "GOODYEAR",
-        codProduto: "1T15R-6",
-        familia: "Suspensão"
-      },
-
-      // ITEM 4: Sistema de Injeção de Motores a Diesel
-      "35260612345678000199550010000044441234567894": {
-        descricao: "Bico Injetor Common Rail Sistema CRDI",
-        marca: "BOSCH",
-        codProduto: "0445120007",
-        familia: "Motor"
-      },
-      "35260612345678000199550010000044441234567123": {
-        descricao: "Bico Injetor Common Rail Sistema CRDI",
-        marca: "BOSCH",
-        codProduto: "0445120007",
-        familia: "Motor"
-      },
-
-      // ITEM 5: Correias de Transmissão do Alternador
-      "35260612345678000199550010000055551234567895": {
-        descricao: "Correia do Alternador Poly-V 8PK1635",
-        marca: "GATES",
-        codProduto: "8PK1635",
-        familia: "Correias"
-      },
-      "5555": {
-        descricao: "Correia do Alternador Poly-V 8PK1635",
-        marca: "GATES",
-        codProduto: "8PK1635",
-        familia: "Correias"
-      },
-
-      // Correção do alinhamento do ID final 5 para bater com o link de clique rápido da tela
-      "35260600012345678901234567890123456789012345": {
-        descricao: "Rolamento de Roda Traseira",
-        marca: "TIMKEN",
-        codProduto: "6205-2RS",
-        familia: "Peças"
-      }
+      "35260600012345678901234567890123456789012345": [
+        {
+          descricao: "Rolamento de Roda Traseira",
+          marca: "TIMKEN",
+          codProduto: "6205-2RS",
+          familia: "Peças",
+          quantidade: 4,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Filtro Separador de Combustível (Racor)",
+          marca: "PARKER",
+          codProduto: "R90-P",
+          familia: "Filtros",
+          quantidade: 8,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Correia do Alternador Poly-V 8PK1635",
+          marca: "GATES",
+          codProduto: "8PK1635",
+          familia: "Correias",
+          quantidade: 5,
+          localizacao: "",
+          alocado: false
+        }
+      ],
+      // ATALHO 5555: Kit de Reparo Rápido de Injeção e Suspensão
+      "35260600012345678901234567890123456789012421": [
+        {
+          descricao: "Bico Injetor Common Rail Sistema CRDI",
+          marca: "BOSCH",
+          codProduto: "0445120007",
+          familia: "Motor",
+          quantidade: 2,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Mola Pneumática da Cabine (Bolsão)",
+          marca: "GOODYEAR",
+          codProduto: "1T15R-6",
+          familia: "Suspensão",
+          quantidade: 3,
+          localizacao: "",
+          alocado: false
+        }
+      ]
     };
 
-    // Fluxo lógico de validação e preenchimento
+    // Fluxo lógico de validação e preenchimento da fila
     if (bancoNotasFiscais[trimmedChave]) {
-      setDescricao(bancoNotasFiscais[trimmedChave].descricao);
-      setMarca(bancoNotasFiscais[trimmedChave].marca);
-      setCodProduto(bancoNotasFiscais[trimmedChave].codProduto);
-      setFamilia(bancoNotasFiscais[trimmedChave].familia);
+      setItemsFila(bancoNotasFiscais[trimmedChave]);
       setIsFetched(true);
     } else if (trimmedChave.length === 44 && /^\d+$/.test(trimmedChave)) {
-      // Comportamento padrão caso usem qualquer outra chave de 44 dígitos numéricos válida
-      setDescricao("Retentor Nitrílico de Cubo de Roda");
-      setMarca("SABÓ");
-      setCodProduto("9102-AR");
-      setFamilia("Retentores");
+      // Comportamento genérico simulando uma nota com 2 itens para qualquer outra chave válida
+      setItemsFila([
+        {
+          descricao: "Retentor Nitrílico de Cubo de Roda",
+          marca: "SABÓ",
+          codProduto: "9102-AR",
+          familia: "Retentores",
+          quantidade: 6,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Jogo de Pastilhas de Freio Dianteira (Truck)",
+          marca: "FRAS-LE",
+          codProduto: "PD-522",
+          familia: "Freios",
+          quantidade: 2,
+          localizacao: "",
+          alocado: false
+        }
+      ]);
       setIsFetched(true);
     } else {
-      setErrorMsg("Chave de teste não localizada. Use as chaves de 44 dígitos.");
+      setErrorMsg("Chave de teste não localizada. Use chaves reais de 44 dígitos ou o atalho rápido: 5555.");
       setIsFetched(false);
     }
   };
 
-  // Confirmar Entrada
-  const handleConfirmarEntrada = (e) => {
-    e.preventDefault();
-    if (!descricao || !marca || !codProduto || !familia || !quantidade) {
-      setErrorMsg("Todos os campos do produto são obrigatórios.");
-      return;
-    }
-
-    // TRAVA 1: Impede reprocessamento da mesma Nota Fiscal (Segurança Logística)
-    const trimmedChave = chaveNf.trim();
-    if (notasProcessadas.includes(trimmedChave)) {
-      setErrorMsg("Bloqueio Fiscal: Esta Nota Fiscal já foi lançada no sistema e não pode ser reprocessada!");
-      alert("Bloqueio Fiscal: Esta Nota Fiscal já foi lançada na FX Minas Construtora e seu saldo já está computado.");
-      return;
-    }
-
-    // TRAVA 2: Verificar duplicidade de peça por Código do Fabricante
-    const existingProduct = products.find(
-      (p) => p.codProduto.trim().toLowerCase() === codProduto.trim().toLowerCase()
-    );
-
-    if (existingProduct) {
-      // Caso 2A: O produto já existe e já possui uma localização mapeada nas prateleiras
-      if (existingProduct.localizacao && existingProduct.localizacao.trim() !== "") {
-        setProducts((prev) =>
-          prev.map((p) =>
-            p.id === existingProduct.id
-              ? { ...p, quantidade: p.quantidade + Number(quantidade) }
-              : p
-          )
-        );
-
-        // Criar histórico cronológico de movimentações
-        const newMov = {
-          id: "mov-" + Date.now(),
-          tipo: "Entrada NF",
-          descricao: `Entrada via NF Chave (${chaveNf}) — Saldo incrementado na posição ${existingProduct.localizacao}`,
-          codProduto: existingProduct.codProduto,
-          produtoDescricao: `${existingProduct.descricao} (${existingProduct.marca})`,
-          quantidade: Number(quantidade),
-          usuario: "Operador Almoxarifado",
-          dataHora: new Date().toISOString()
-        };
-        setMovements((prev) => [newMov, ...prev]);
-
-        // Adiciona a nota atual à lista de notas processadas para bloqueio futuro
-        setNotasProcessadas((prev) => [...prev, trimmedChave]);
-
-        // Reset completo dos campos do formulário
-        setChaveNf("");
-        setDescricao("");
-        setMarca("");
-        setCodProduto("");
-        setFamilia("");
-        setQuantidade(5);
-        setIsFetched(false);
-
-        alert(`Produto já cadastrado no sistema! A quantidade foi adicionada diretamente à posição ${existingProduct.localizacao}.`);
-        return;
-      } else {
-        // Caso 2B: O produto existe no histórico, mas por algum motivo ficou pendente de localização física
-        const tempProd = {
-          ...existingProduct,
-          quantidade: Number(quantidade) 
-        };
-        setTempProduct(tempProd);
-        setSelectedLocation("P1-A1");
-        setShowLocationModal(true);
-        return;
-      }
-    }
-
-    // Caso 3: O produto é inteiramente inédito no almoxarifado
-    const codInterno = Math.floor(1000 + Math.random() * 9000);
-    const id = "prod-" + Date.now();
-
-    const newProd = {
-      id,
-      descricao,
-      marca,
-      codProduto,
-      codInterno,
-      familia,
-      quantidade: Number(quantidade),
-      localizacao: "", 
-    };
-
-    setTempProduct(newProd);
-    setSelectedLocation("P1-A1"); 
+  // Abrir modal de prateleira para um item específico da fila
+  const handleAbrirMapeamento = (index) => {
+    setActiveItemIndex(index);
+    const item = itemsFila[index];
+    
+    // Se o item já existia no estoque global e já tinha posição física, sugere a mesma
+    const itemEstoque = products.find(p => p.codProduto.trim().toLowerCase() === item.codProduto.trim().toLowerCase());
+    setSelectedLocation(itemEstoque?.localizacao || "P1-A1");
     setShowLocationModal(true);
   };
 
-  // Salvar Localização e Concluir Fluxo
-  const handleSalvarLocalizacao = () => {
-    if (!tempProduct) return;
+  // Salva a localização temporariamente na fila de conferência
+  const handleConfirmarLocalizacaoItem = () => {
+    setItemsFila(prev => prev.map((item, idx) => 
+      idx === activeItemIndex 
+        ? { ...item, localizacao: selectedLocation, alocado: true } 
+        : item
+    ));
+    setShowLocationModal(false);
+    setActiveItemIndex(null);
+  };
 
-    const existingIndex = products.findIndex(
-      (p) => p.codProduto.trim().toLowerCase() === tempProduct.codProduto.trim().toLowerCase()
-    );
+  // Conclui a Nota Fiscal, atualizando o estoque real e gerando logs para cada item
+  const handleFinalizarNotaCompleta = (e) => {
+    e.preventDefault();
 
-    const trimmedChave = chaveNf.trim();
-
-    if (existingIndex !== -1) {
-      // Integração de item existente que estava sem prateleira vinculada
-      const existingProduct = products[existingIndex];
-      
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === existingProduct.id
-            ? { 
-                ...p, 
-                quantidade: p.quantidade + tempProduct.quantidade,
-                localizacao: selectedLocation
-              }
-            : p
-        )
-      );
-
-      const newMov = {
-        id: "mov-" + Date.now(),
-        tipo: "Entrada NF",
-        descricao: `Entrada via NF Chave (${chaveNf}) — Vinculado à posição ${selectedLocation} e incrementado`,
-        codProduto: tempProduct.codProduto,
-        produtoDescricao: `${tempProduct.descricao} (${tempProduct.marca})`,
-        quantidade: tempProduct.quantidade,
-        usuario: "Operador Almoxarifado",
-        dataHora: new Date().toISOString()
-      };
-      setMovements((prev) => [newMov, ...prev]);
-
-      alert("Produto localizado e atualizado! Nova posição física sincronizada.");
-    } else {
-      // Inserção de registro inédito completa
-      const finalizedProduct = {
-        ...tempProduct,
-        localizacao: selectedLocation
-      };
-
-      setProducts((prev) => [finalizedProduct, ...prev]);
-
-      const newMov = {
-        id: "mov-" + Date.now(),
-        tipo: "Entrada NF",
-        descricao: `Entrada de novo item via NF Chave (${chaveNf}) — Alocado na posição ${selectedLocation}`,
-        codProduto: finalizedProduct.codProduto,
-        produtoDescricao: `${finalizedProduct.descricao} (${finalizedProduct.marca})`,
-        quantidade: finalizedProduct.quantidade,
-        usuario: "Operador Almoxarifado",
-        dataHora: new Date().toISOString()
-      };
-      setMovements((prev) => [newMov, ...prev]);
-
-      alert(`Item cadastrado com sucesso!\nCód. Interno Gerado: #${finalizedProduct.codInterno}\nLocalização: ${finalizedProduct.localizacao}`);
+    // Validação de segurança: todos os itens precisam ter recebido uma posição física
+    const pendentes = itemsFila.some(item => !item.alocado);
+    if (pendentes) {
+      alert("Atenção: É necessário definir a localização de todos os itens da Nota Fiscal antes de salvar.");
+      return;
     }
 
-    // Sela a Nota Fiscal no estado impedindo reuso em transações subsequentes
-    setNotasProcessadas((prev) => [...prev, trimmedChave]);
+    const trimmedChave = chaveNf.trim();
+    let novosProdutos = [...products];
+    let novasMovimentacoes = [];
 
-    // Limpeza operacional completa de formulários e estados temporários
+    itemsFila.forEach(item => {
+      const existingIndex = novosProdutos.findIndex(
+        (p) => p.codProduto.trim().toLowerCase() === item.codProduto.trim().toLowerCase()
+      );
+
+      if (existingIndex !== -1) {
+        // Incrementa o produto existente e atualiza a localização se necessário
+        novosProdutos[existingIndex] = {
+          ...novosProdutos[existingIndex],
+          quantidade: novosProdutos[existingIndex].quantidade + item.quantidade,
+          localizacao: item.localizacao
+        };
+      } else {
+        // Insere um produto inédito gerando código interno único
+        const codInterno = Math.floor(1000 + Math.random() * 9000);
+        novosProdutos.unshift({
+          id: "prod-" + Date.now() + Math.random(),
+          descricao: item.descricao,
+          marca: item.marca,
+          codProduto: item.codProduto,
+          codInterno,
+          familia: item.familia,
+          quantidade: item.quantidade,
+          localizacao: item.localizacao
+        });
+      }
+
+      // Cria a linha de histórico individual para o relatório
+      novasMovimentacoes.push({
+        id: "mov-" + Date.now() + Math.random(),
+        tipo: "Entrada NF",
+        descricao: `Lote NF (${chaveNf}) — Alocado na posição ${item.localizacao}`,
+        codProduto: item.codProduto,
+        produtoDescricao: `${item.descricao} (${item.marca})`,
+        quantidade: item.quantidade,
+        usuario: "Operador Almoxarifado",
+        dataHora: new Date().toISOString()
+      });
+    });
+
+    // Atualiza os estados globais do sistema
+    setProducts(novosProdutos);
+    setMovements(prev => [...novasMovimentacoes, ...prev]);
+    setNotasProcessadas(prev => [...prev, trimmedChave]);
+
+    // Reset operacional completo
     setChaveNf("");
-    setDescricao("");
-    setMarca("");
-    setCodProduto("");
-    setFamilia("");
-    setQuantidade(5);
+    setItemsFila([]);
     setIsFetched(false);
-    setShowLocationModal(false);
-    setTempProduct(null);
+
+    alert("Nota Fiscal processada com sucesso! Todos os itens foram integrados ao inventário.");
   };
+
+  // Verifica se o lote todo já foi mapeado para liberar o botão de encerramento
+  const todoLoteMapeado = itemsFila.length > 0 && itemsFila.every(item => item.alocado);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -314,14 +239,14 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
           Entrada de Nota Fiscal
         </h2>
         <p className="text-sm text-gray-600">
-          Simule a importação de Notas Fiscais eletrônicas por meio da chave de acesso e realize a triagem logística de novos itens.
+          Simule a importação de lotes de itens de Notas Fiscais eletrônicas por meio da chave de acesso e realize a triagem por produto.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Painel de Busca/Chave */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4 h-fit">
           <h3 className="font-extrabold text-gray-950 text-sm uppercase tracking-wider flex items-center space-x-2">
             <FileText size={16} className="text-orange-500" />
             <span>Chave de Acesso</span>
@@ -329,12 +254,12 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-600 uppercase">
-              Chave de Acesso ou Atalho de Teste
+              Chave de Acesso da NF-e
             </label>
             <div className="relative">
               <input
                 type="text"
-                placeholder="Ex: Chave Completa"
+                placeholder="Insira a chave ou use o atalho 5555"
                 value={chaveNf}
                 onChange={(e) => setChaveNf(e.target.value)}
                 maxLength={44}
@@ -342,7 +267,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
               />
             </div>
             <p className="text-[10px] text-gray-400">
-              Clique <span className="font-bold text-orange-600 cursor-pointer underline hover:text-orange-700" onClick={() => setChaveNf("35260600012345678901234567890123456789012345")}>aqui</span> para preencher o código de simulação padrão.
+              Clique <span className="font-bold text-orange-600 cursor-pointer underline hover:text-orange-700" onClick={() => setChaveNf("35260600012345678901234567890123456789012345")}>aqui</span> para carregar a nota de simulação com múltiplos itens.
             </p>
           </div>
 
@@ -363,122 +288,120 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
           </button>
         </div>
 
-        {/* Formulário de Importação */}
-        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-          <h3 className="font-extrabold text-gray-950 text-sm uppercase tracking-wider mb-5 pb-2 border-b border-gray-100">
-            Dados do Produto Recebido
-          </h3>
+        {/* Fila de Triagem / Múltiplos Itens Recebidos */}
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-5">
+          <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
+            <h3 className="font-extrabold text-gray-950 text-sm uppercase tracking-wider flex items-center space-x-2">
+              <Layers size={16} className="text-orange-500" />
+              <span>Itens Identificados no XML ({itemsFila.length})</span>
+            </h3>
+            {isFetched && (
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-gray-950 text-white font-mono">
+                Lote Carregado
+              </span>
+            )}
+          </div>
 
-          <form onSubmit={handleConfirmarEntrada} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Descrição do Item
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: Rolamento de Esfera"
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  disabled={!isFetched}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-60 focus:outline-none focus:border-orange-500"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Marca
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: TIMKEN"
-                  value={marca}
-                  onChange={(e) => setMarca(e.target.value)}
-                  disabled={!isFetched}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-60 focus:outline-none focus:border-orange-500"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Código do Produto (Fabricante)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: 6205-2RS"
-                  value={codProduto}
-                  onChange={(e) => setCodProduto(e.target.value)}
-                  disabled={!isFetched}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-60 focus:outline-none focus:border-orange-500"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Família / Grupo
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: Peças"
-                  value={familia}
-                  onChange={(e) => setFamilia(e.target.value)}
-                  disabled={!isFetched}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-60 focus:outline-none focus:border-orange-500"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1 md:col-span-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Quantidade Recebida (Unidades)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={quantidade}
-                  onChange={(e) => setQuantidade(e.target.value)}
-                  disabled={!isFetched}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-60 focus:outline-none focus:border-orange-500"
-                  required
-                />
-              </div>
-
+          {!isFetched ? (
+            <div className="text-center py-16 text-gray-400 italic text-sm flex flex-col items-center justify-center space-y-2">
+              <Package size={32} className="stroke-[1.5] text-gray-300" />
+              <span>Aguardando leitura de chave de acesso para listar os produtos da nota.</span>
             </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="overflow-x-auto border border-gray-150 rounded-xl">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-gray-500 font-bold uppercase bg-gray-50">
+                      <th className="py-3 px-4">Produto / Descrição</th>
+                      <th className="py-3 px-4">Cód. Fabricante</th>
+                      <th className="py-3 px-4 text-center">Qtd</th>
+                      <th className="py-3 px-4 text-center">Posição</th>
+                      <th className="py-3 px-4 text-right">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 font-medium">
+                    {itemsFila.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50/60 transition-colors">
+                        <td className="py-3 px-4">
+                          <p className="text-gray-950 font-bold">{item.descricao}</p>
+                          <p className="text-gray-400 text-[10px] font-semibold uppercase">{item.marca} • {item.familia}</p>
+                        </td>
+                        <td className="py-3 px-4 font-mono font-bold text-gray-600">
+                          {item.codProduto}
+                        </td>
+                        <td className="py-3 px-4 text-center font-black text-gray-950">
+                          {item.quantidade}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {item.alocado ? (
+                            <span className="bg-orange-50 text-orange-700 font-bold border border-orange-200 px-2 py-0.5 rounded font-mono text-[10px]">
+                              📍 {item.localizacao}
+                            </span>
+                          ) : (
+                            <span className="bg-amber-50 text-amber-600 font-bold border border-amber-100 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
+                              Pendente
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleAbrirMapeamento(index)}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all shadow-sm ${
+                              item.alocado 
+                                ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200" 
+                                : "bg-gray-950 text-white hover:bg-black"
+                            }`}
+                          >
+                            {item.alocado ? "Remapear" : "Mapear Posição"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            <div className="pt-4">
-              <button
-                type="submit"
-                disabled={!isFetched}
-                className="w-full md:w-auto px-6 py-3 bg-gray-950 text-white font-bold uppercase text-xs rounded-lg hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              >
-                <CheckCircle2 size={16} className="text-orange-500" />
-                <span>Confirmar Entrada & Definir Localização</span>
-              </button>
+              {/* Botão de Encerramento do Lote */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleFinalizarNotaCompleta}
+                  disabled={!todoLoteMapeado}
+                  className={`w-full md:w-auto px-6 py-3 font-black uppercase text-xs rounded-lg transition-colors flex items-center justify-center space-x-2 shadow-sm ${
+                    todoLoteMapeado 
+                      ? "bg-gray-950 text-white hover:bg-black cursor-pointer" 
+                      : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                  }`}
+                >
+                  <CheckCircle2 size={16} className={todoLoteMapeado ? "text-orange-500" : "text-gray-300"} />
+                  <span>Concluir Entrada do Lote e Registrar Estoque</span>
+                </button>
+                {!todoLoteMapeado && (
+                  <p className="text-[10px] text-amber-600 font-semibold mt-1.5 flex items-center space-x-1">
+                    <span>⚠️ Mapeie a posição física de todos os itens da tabela acima para liberar a conclusão fiscal.</span>
+                  </p>
+                )}
+              </div>
             </div>
-          </form>
-
+          )}
         </div>
 
       </div>
 
       {/* Modal/Overlay de Localização (Grade de Prateleira 5x3) */}
-      {showLocationModal && tempProduct && (
+      {showLocationModal && activeItemIndex !== null && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-gray-200 rounded-2xl shadow-xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
-            <div className="bg-gray-950 text-white p-5 border-b border-gray-800 flex items-center justify-between">
-              <div>
-                <h4 className="font-extrabold text-sm uppercase tracking-wider text-orange-500">
-                  Triagem Logística: Prateleira Virtual
-                </h4>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Item: {tempProduct.descricao} ({tempProduct.marca}) - Cód. Interno: <span className="font-bold text-white">#{tempProduct.codInterno || "EXISTENTE"}</span>
-                </p>
-              </div>
+            <div className="bg-gray-950 text-white p-5 border-b border-gray-800">
+              <h4 className="font-extrabold text-sm uppercase tracking-wider text-orange-500">
+                Triagem Logística: Prateleira Virtual
+              </h4>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Alocando: <span className="font-bold text-white">{itemsFila[activeItemIndex].descricao}</span> ({itemsFila[activeItemIndex].marca})
+              </p>
             </div>
 
             {/* Modal Body */}
@@ -489,29 +412,21 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
                   <span>Selecione a Posição Física na Prateleira</span>
                 </span>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  Clique em um dos quadrantes abaixo para alocar o item no almoxarifado. A nomenclatura de localização segue o padrão <span className="font-semibold text-gray-800">P1-[Linha][Coluna]</span>.
+                  Defina o quadrante no almoxarifado para as <span className="font-bold text-gray-800">{itemsFila[activeItemIndex].quantidade} unidades</span> deste produto. O padrão segue a estrutura <span className="font-semibold text-gray-800">P1-[Linha][Coluna]</span>.
                 </p>
               </div>
 
               {/* Grid 5x3 Visualizer */}
               <div className="bg-gray-100 border border-gray-200 rounded-xl p-5 shadow-inner">
                 <div className="grid grid-cols-4 gap-2 text-center items-center">
-                  
-                  {/* Canto superior esquerdo em branco */}
                   <div className="text-[10px] font-bold text-gray-400 uppercase">Prateleira P1</div>
-                  
-                  {/* Cabeçalho de Colunas */}
                   {cols.map(c => (
                     <div key={c} className="text-xs font-bold text-gray-600">Coluna {c}</div>
                   ))}
 
-                  {/* Renderizando as linhas e quadrantes */}
                   {rows.map(r => (
                     <React.Fragment key={r}>
-                      {/* Indicador de Linha */}
                       <div className="text-xs font-bold text-gray-600">Linha {r}</div>
-                      
-                      {/* Quadrantes da linha */}
                       {cols.map(c => {
                         const locCode = `P1-${r}${c}`;
                         const isSelected = selectedLocation === locCode;
@@ -533,7 +448,6 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
                       })}
                     </React.Fragment>
                   ))}
-
                 </div>
               </div>
 
@@ -541,7 +455,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
-                    Localização Final Selecionada:
+                    Localização Mapeada:
                   </span>
                   <span className="text-lg font-black text-gray-900 font-mono">
                     {selectedLocation}
@@ -549,10 +463,10 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
-                    Quantidade de Peças:
+                    Lote do Item:
                   </span>
                   <span className="text-lg font-black text-orange-600">
-                    {tempProduct.quantidade} unidades
+                    {itemsFila[activeItemIndex].quantidade} unidades
                   </span>
                 </div>
               </div>
@@ -562,17 +476,17 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
             <div className="bg-gray-50 p-4 border-t border-gray-100 flex items-center justify-end space-x-2">
               <button
                 type="button"
-                onClick={() => setShowLocationModal(false)}
+                onClick={() => { setShowLocationModal(false); setActiveItemIndex(null); }}
                 className="px-4 py-2 border border-gray-300 text-gray-700 text-xs font-bold uppercase rounded-lg hover:bg-gray-100 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                onClick={handleSalvarLocalizacao}
+                onClick={handleConfirmarLocalizacaoItem}
                 className="px-5 py-2.5 bg-orange-500 text-black text-xs font-black uppercase rounded-lg hover:bg-orange-600 transition-colors shadow-sm"
               >
-                Salvar Localização e Finalizar
+                Confirmar Posição do Item
               </button>
             </div>
           </div>

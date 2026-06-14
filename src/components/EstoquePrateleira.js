@@ -8,7 +8,8 @@ import {
   X, 
   AlertTriangle,
   ArrowRight,
-  TrendingDown
+  TrendingDown,
+  Trash2
 } from "lucide-react";
 
 export default function EstoquePrateleira({ products, setProducts, setMovements }) {
@@ -18,6 +19,7 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
   
   // Controle do Painel Lateral (Drawer) de Prateleira
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Grid de Prateleira (5 Linhas A-E, 3 Colunas 1-3)
   const rows = ["A", "B", "C", "D", "E"];
@@ -70,6 +72,14 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
       dataHora: new Date().toISOString()
     };
     setMovements(prev => [newMov, ...prev]);
+  };
+
+  // Excluir produto sem gerar histórico (correção operacional)
+  const handleDeleteProduct = () => {
+    if (!selectedProduct) return;
+    setProducts((prev) => prev.filter((p) => p.id !== selectedProduct.id));
+    setSelectedProduct(null);
+    setShowDeleteModal(false);
   };
 
   return (
@@ -268,6 +278,15 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
                       <span className="font-bold">Aviso: Estoque baixo necessita reabastecimento.</span>
                     </div>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteModal(true)}
+                    className="w-full flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs py-2.5 rounded-lg transition-colors shadow-sm mt-3"
+                  >
+                    <Trash2 size={14} />
+                    <span>Excluir Item do Estoque</span>
+                  </button>
                 </div>
 
                 {/* Grade 5x3 Visual da Prateleira */}
@@ -329,6 +348,43 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
         </div>
 
       </div>
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-6 space-y-4">
+              <div className="flex items-center space-x-3 text-red-650">
+                <div className="bg-red-50 p-2 rounded-lg text-red-600">
+                  <AlertTriangle size={24} />
+                </div>
+                <h4 className="font-extrabold text-lg text-gray-950">
+                  Excluir Item do Inventário?
+                </h4>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Tem certeza de que deseja remover o item <span className="font-bold text-gray-950">{selectedProduct.descricao}</span> (Cód. Interno <span className="font-bold font-mono">#{selectedProduct.codInterno}</span>) permanentemente do estoque? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex items-center justify-end space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-xs font-bold uppercase rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteProduct}
+                  className="px-5 py-2.5 bg-red-600 text-white text-xs font-bold uppercase rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+                >
+                  Sim, Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

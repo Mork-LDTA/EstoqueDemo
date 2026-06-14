@@ -131,7 +131,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
       setFamilia("Retentores");
       setIsFetched(true);
     } else {
-      setErrorMsg("Chave de teste não localizada. Use as chaves de 44 dígitos, o link auxiliar ou os atalhos: 1111, 2222, 3333, 4444 ou 5555.");
+      setErrorMsg("Chave de teste não localizada. Use as chaves de 44 dígitos.");
       setIsFetched(false);
     }
   };
@@ -334,7 +334,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
             <div className="relative">
               <input
                 type="text"
-                placeholder="Ex: 1111, 2222 ou a Chave Completa"
+                placeholder="Ex: Chave Completa"
                 value={chaveNf}
                 onChange={(e) => setChaveNf(e.target.value)}
                 maxLength={44}

@@ -158,7 +158,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Carlos Silva (Manutenção)"
+                  placeholder="Ex: Carlos Silva"
                   value={solicitante}
                   onChange={(e) => setSolicitante(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"
@@ -174,7 +174,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Marcos Lima (Produção)"
+                  placeholder="Ex: Marcos Lima"
                   value={recebedor}
                   onChange={(e) => setRecebedor(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"
@@ -186,11 +186,11 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase flex items-center space-x-1">
                   <Cpu size={12} className="text-gray-400" />
-                  <span>Equipamento de Destino</span>
+                  <span>Função ou Cargo (Recebedor)</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Transportador T-10"
+                  placeholder="Ex: Supervisor de Manutenção"
                   value={equipamento}
                   onChange={(e) => setEquipamento(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"

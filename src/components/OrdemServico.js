@@ -5,7 +5,8 @@ import {
   Cpu, 
   AlertCircle,
   FileCheck,
-  Calendar
+  Calendar,
+  Printer
 } from "lucide-react";
 
 export default function OrdemServico({ products, setProducts, osList, setOsList, movements, setMovements }) {
@@ -55,6 +56,247 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
 
   // Obter o produto selecionado
   const selectedProduct = products.find(p => p.id === selectedProductId);
+// Função para Gerar e Baixar o Termo de Responsabilidade em formato HTML/PDF direto para Downloads
+  const handlePrintOs = (os) => {
+    // Tenta encontrar o produto no estoque para obter marca e codInterno
+    const prod = products.find(p => p.codProduto === os.codProduto) || {
+      descricao: os.produtoDescricao.split(" (")[0],
+      marca: os.produtoDescricao.includes("(") ? os.produtoDescricao.split("(")[1].replace(")", "") : "",
+      codProduto: os.codProduto,
+      codInterno: "---"
+    };
+    
+    const dateFormatted = new Date(os.dataHora).toLocaleString("pt-BR");
+
+    // Montagem do template estruturado do documento contratual profissional
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Termo de Retirada - ${os.id}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+            body {
+              font-family: 'Inter', sans-serif;
+              color: #111827;
+              background-color: #ffffff;
+              margin: 0;
+              padding: 30px;
+              font-size: 11px;
+              line-height: 1.5;
+            }
+            .header-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+              border: 1px solid #111827;
+            }
+            .header-table td {
+              border: 1px solid #111827;
+              padding: 10px;
+              vertical-align: middle;
+            }
+            .company-name {
+              font-size: 14px;
+              font-weight: 800;
+              letter-spacing: 0.5px;
+            }
+            .doc-title {
+              font-size: 12px;
+              font-weight: 700;
+              text-align: center;
+              text-transform: uppercase;
+            }
+            .control-info {
+              font-size: 10px;
+              font-weight: 600;
+              text-align: right;
+            }
+            .os-id {
+              font-size: 14px;
+              font-weight: 800;
+              color: #000;
+            }
+            .section-header {
+              font-size: 10px;
+              font-weight: 800;
+              text-transform: uppercase;
+              background-color: #f3f4f6;
+              padding: 5px 8px;
+              border: 1px solid #111827;
+              border-bottom: none;
+              margin-top: 15px;
+            }
+            .info-table {
+              width: 100%;
+              border-collapse: collapse;
+              border: 1px solid #111827;
+            }
+            .info-table td {
+              border: 1px solid #111827;
+              padding: 8px 10px;
+              width: 50%;
+              vertical-align: top;
+            }
+            .info-table p {
+              margin: 3px 0;
+            }
+            .info-table span {
+              font-weight: 700;
+            }
+            .items-table {
+              width: 100%;
+              border-collapse: collapse;
+              border: 1px solid #111827;
+              margin-top: -1px;
+            }
+            .items-table th {
+              border: 1px solid #111827;
+              background-color: #f3f4f6;
+              font-weight: 800;
+              text-transform: uppercase;
+              font-size: 9px;
+              padding: 6px 8px;
+              text-align: left;
+            }
+            .items-table td {
+              border: 1px solid #111827;
+              padding: 6px 8px;
+              font-size: 10px;
+            }
+            .clause-box {
+              border: 1px solid #111827;
+              padding: 12px;
+              font-size: 10px;
+              text-align: justify;
+              margin-top: 15px;
+              line-height: 1.4;
+            }
+            .signatures-container {
+              margin-top: 50px;
+              display: table;
+              width: 100%;
+            }
+            .signature-col {
+              display: table-cell;
+              width: 50%;
+              text-align: center;
+              vertical-align: bottom;
+              padding: 0 20px;
+            }
+            .line-draw {
+              border-top: 1px solid #000;
+              width: 80%;
+              margin: 0 auto 5px auto;
+            }
+            .signature-label {
+              font-size: 9px;
+              font-weight: 700;
+              text-transform: uppercase;
+              white-space: pre-line;
+            }
+          </style>
+        </head>
+        <body>
+          <table class="header-table">
+            <tr>
+              <td style="width: 35%;">
+                <div class="company-name">FX MINAS CONSTRUTORA LTDA</div>
+                <div style="font-size: 8px; color: #4b5563;">DEPARTAMENTO DE LOGÍSTICA & ALMOXARIFADO</div>
+              </td>
+              <td style="width: 40%;">
+                <div class="doc-title">TERMO DE RESPONSABILIDADE E RETIRADA DE MATERIAIS</div>
+              </td>
+              <td style="width: 25%;" class="control-info">
+                <div>Nº CONTROLE: <span class="os-id">${os.id}</span></div>
+                <div style="margin-top: 4px;">EMISSÃO: ${dateFormatted}</div>
+              </td>
+            </tr>
+          </table>
+
+          <div class="section-header">Bloco 1 - Identificação dos Envolvidos</div>
+          <table class="info-table">
+            <tr>
+              <td>
+                <p><span>RESPONSÁVEL PELA LIBERAÇÃO:</span> Almoxarife</p>
+                <p><span>DEPARTAMENTO:</span> Almoxarifado Central</p>
+              </td>
+              <td>
+                <p><span>SOLICITANTE / RECEBEDOR:</span> ${os.solicitante}</p>
+                <p><span>FUNÇÃO OU CARGO (RECEBEDOR):</span> ${os.recebedor} (${os.equipamento})</p>
+                <p><span>APLICAÇÃO:</span> ${os.aplicacao}</p>
+              </td>
+            </tr>
+          </table>
+
+          <div class="section-header">Bloco 2 - Tabela de Itens Retirados</div>
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 5%; text-align: center;">Item</th>
+                <th style="width: 40%;">Descrição do Produto</th>
+                <th style="width: 15%;">Marca</th>
+                <th style="width: 15%;">Ref. Fabricante</th>
+                <th style="width: 15%;">Cód. Interno</th>
+                <th style="width: 10%; text-align: center;">Qtd Retirada</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align: center;">1</td>
+                <td><strong>${prod.descricao || os.produtoDescricao}</strong></td>
+                <td>${prod.marca || "---"}</td>
+                <td style="font-family: monospace;">${os.codProduto}</td>
+                <td style="font-family: monospace;">#${prod.codInterno}</td>
+                <td style="text-align: center; font-weight: bold; font-size: 11px;">${os.quantidade}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="section-header">Bloco 3 - Cláusula de Compromisso e Responsabilidade</div>
+          <div class="clause-box">
+            Declaro para os devidos fins que recebi em perfeito estado os materiais acima listados, assumindo total responsabilidade pelo uso adequado, aplicação na respectiva ordem de serviço e guarda dos mesmos.
+          </div>
+
+          <div class="signatures-container">
+            <div class="signature-col">
+              <div class="line-draw"></div>
+              <div class="signature-label">SOLICITANTE / RECEBEDOR<br>CPF/RE: ______________________________</div>
+            </div>
+            <div class="signature-col">
+              <div class="line-draw"></div>
+              <div class="signature-label">RESPONSÁVEL PELA LIBERAÇÃO<br>ALMOXARIFADO</div>
+            </div>
+          </div>
+          
+          <script>
+            // Força a execução automática da impressão ao converter ou abrir o arquivo
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    // Converte a string HTML em um objeto Blob seguro
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    
+    // Instancia uma URL temporária na memória do navegador
+    const url = URL.createObjectURL(blob);
+    
+    // Constrói um elemento âncora oculto para injetar o evento de download
+    const link = document.createElement("a");
+    link.href = url;
+    
+    // Define a saída com a nomenclatura estruturada da OS correspondente
+    link.download = `Termo_Responsabilidade_${os.id}.html`;
+    
+    // Insere o elemento, executa o clique virtual e o remove da estrutura do DOM
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Libera a memória alocada para a URL temporária
+    URL.revokeObjectURL(url);
+  };
 
   // Submeter Ordem de Serviço (Saída de Estoque)
   const handleSubmitOs = (e) => {
@@ -127,6 +369,9 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     setProducts(updatedProducts);
     setOsList([newOs, ...osList]);
     setMovements([newMov, ...movements]);
+
+    // Gerar e imprimir o Termo de Responsabilidade em PDF
+    handlePrintOs(newOs);
 
     // Limpar Formulário e dar Feedback
     setSolicitante("");
@@ -452,7 +697,17 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                 osList.map((os, idx) => (
                   <div key={os.id || idx} className="pt-3 first:pt-0 text-xs space-y-1">
                     <div className="flex justify-between items-center font-bold">
-                      <span className="text-orange-600 font-mono">{os.id}</span>
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-orange-600 font-mono">{os.id}</span>
+                        <button
+                          type="button"
+                          onClick={() => handlePrintOs(os)}
+                          title="Reimprimir Termo"
+                          className="text-gray-400 hover:text-orange-500 p-0.5 rounded transition-colors"
+                        >
+                          <Printer size={12} />
+                        </button>
+                      </div>
                       <span className="text-[10px] text-gray-400 font-normal">{new Date(os.dataHora).toLocaleDateString()}</span>
                     </div>
                     <p className="font-bold text-gray-800 leading-tight">{os.produtoDescricao}</p>

@@ -21,6 +21,7 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
   // Controle do Painel Lateral (Drawer) de Prateleira
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [prateleiraAtiva, setPrateleiraAtiva] = useState("P1");
 
   // Grid de Prateleira (5 Linhas A-E, 3 Colunas 1-3)
   const rows = ["A", "B", "C", "D", "E"];
@@ -196,7 +197,17 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
                     return (
                       <tr 
                         key={p.id}
-                        onClick={() => setSelectedProduct(p)}
+                        onClick={() => {
+                          setSelectedProduct(p);
+                          if (p && p.localizacao) {
+                            const shelf = p.localizacao.split("-")[0];
+                            if (shelf === "P1" || shelf === "P2") {
+                              setPrateleiraAtiva(shelf);
+                            }
+                          } else {
+                            setPrateleiraAtiva("P1");
+                          }
+                        }}
                         className={`hover:bg-orange-50/20 transition-colors cursor-pointer font-medium ${
                           isSelected ? "bg-orange-50/40 border-l-4 border-l-orange-500" : ""
                         }`}
@@ -324,11 +335,37 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
                     <span>Grade de Ocupação</span>
                   </span>
 
+                  {/* Seletor de Estrutura Multi-Prateleiras */}
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setPrateleiraAtiva("P1")}
+                      className={`flex-1 py-1.5 text-[10px] font-black uppercase rounded-lg transition-colors border ${
+                        prateleiraAtiva === "P1"
+                          ? "bg-gray-950 text-orange-500 border-gray-950 shadow-sm"
+                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                      }`}
+                    >
+                      Prateleira P1
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPrateleiraAtiva("P2")}
+                      className={`flex-1 py-1.5 text-[10px] font-black uppercase rounded-lg transition-colors border ${
+                        prateleiraAtiva === "P2"
+                          ? "bg-gray-950 text-orange-500 border-gray-950 shadow-sm"
+                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                      }`}
+                    >
+                      Prateleira P2
+                    </button>
+                  </div>
+
                   <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 shadow-inner">
                     <div className="grid grid-cols-4 gap-1.5 text-center items-center">
                       
                       {/* Indicador superior */}
-                      <div className="text-[9px] font-bold text-gray-400 uppercase">P1</div>
+                      <div className="text-[9px] font-bold text-gray-400 uppercase">{prateleiraAtiva}</div>
                       
                       {/* Colunas */}
                       {cols.map(c => (
@@ -340,7 +377,7 @@ export default function EstoquePrateleira({ products, setProducts, setMovements 
                         <React.Fragment key={r}>
                           <div className="text-[10px] font-bold text-gray-500">L{r}</div>
                           {cols.map(c => {
-                            const locCode = `P1-${r}${c}`;
+                            const locCode = `${prateleiraAtiva}-${r}${c}`;
                             const isCurrent = selectedProduct.localizacao === locCode;
 
                             return (

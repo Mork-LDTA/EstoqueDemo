@@ -7,6 +7,7 @@ import NFEntrada from "@/components/NFEntrada";
 import EstoquePrateleira from "@/components/EstoquePrateleira";
 import OrdemServico from "@/components/OrdemServico";
 import Relatorios from "@/components/Relatorios";
+import CadastroManual from "@/components/CadastroManual";
 import { getStorageData, saveStorageData } from "@/utils/storage";
 
 export default function Home() {
@@ -61,6 +62,15 @@ export default function Home() {
       case "nf-entrada":
         return (
           <NFEntrada
+            products={products}
+            setProducts={setProducts}
+            movements={movements}
+            setMovements={setMovements}
+          />
+        );
+      case "cadastro-manual":
+        return (
+          <CadastroManual
             products={products}
             setProducts={setProducts}
             movements={movements}

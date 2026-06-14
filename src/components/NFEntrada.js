@@ -311,7 +311,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
       {/* Header */}
       <div className="border-b border-gray-200 pb-4">
         <h2 className="text-2xl font-black text-gray-950 uppercase tracking-tight">
-          Entrada de Nota Fiscal (XML)
+          Entrada de Nota Fiscal
         </h2>
         <p className="text-sm text-gray-600">
           Simule a importação de Notas Fiscais eletrônicas por meio da chave de acesso e realize a triagem logística de novos itens.

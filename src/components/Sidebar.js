@@ -2,6 +2,7 @@ import React from "react";
 import { 
   LayoutDashboard, 
   FileInput, 
+  PlusCircle,
   Package, 
   Wrench, 
   BarChart3,
@@ -12,6 +13,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
   const menuItems = [
     { id: "dashboard", label: "Painel de Controle", icon: LayoutDashboard },
     { id: "nf-entrada", label: "Entrada de Nota Fiscal", icon: FileInput },
+    { id: "cadastro-manual", label: "Cadastro Manual", icon: PlusCircle },
     { id: "estoque", label: "Estoque e Prateleira", icon: Package },
     { id: "ordem-servico", label: "Ordem de Serviço", icon: Wrench },
     { id: "relatorios", label: "Histórico e Relatórios", icon: BarChart3 },

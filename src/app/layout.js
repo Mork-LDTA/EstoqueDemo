@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "EstoqueIQP - Controle de Estoque Inteligente",
+  title: "FX Estoque - Controle de Estoque Inteligente",
   description: "Painel inteligente de controle de estoque industrial para almoxarifados modernos.",
 };
 

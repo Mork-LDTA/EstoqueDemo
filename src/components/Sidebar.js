@@ -26,10 +26,10 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         </div>
         <div>
           <h1 className="font-extrabold text-lg tracking-wider text-white">
-            ESTOQUE<span className="text-orange-500">IQP</span>
+            FX<span className="text-orange-500">Minas</span>
           </h1>
           <p className="text-xs text-gray-500 uppercase tracking-widest font-semibold">
-            Painel Industrial
+            Painel de Controle
           </p>
         </div>
       </div>

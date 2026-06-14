@@ -24,6 +24,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
   // Produto recém cadastrado que aguarda localização
   const [tempProduct, setTempProduct] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState("");
+  const [notasProcessadas, setNotasProcessadas] = useState([]);
 
   // Grid de Prateleira (5 Linhas A-E, 3 Colunas 1-3)
   const rows = ["A", "B", "C", "D", "E"];
@@ -31,109 +32,109 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
 
   // Mecanismo de Simulação (Mock)
   const handlePuxarDados = () => {
-      setErrorMsg("");
-      const trimmedChave = chaveNf.trim();
+    setErrorMsg("");
+    const trimmedChave = chaveNf.trim();
 
-      // Dicionário de Mocks específicos para manutenção de Caminhões da Construtora
-      const bancoNotasFiscais = {
-        // ITEM 1: Filtro Separador de Água (Essencial para diesel de canteiro de obras)
-        "35260612345678000199550010000011111234567891": {
-          descricao: "Filtro Separador de Combustível (Racor)",
-          marca: "PARKER",
-          codProduto: "R90-P",
-          familia: "Filtros"
-        },
-        "1111": { // Atalho rápido para digitação no Pitch
-          descricao: "Filtro Separador de Combustível (Racor)",
-          marca: "PARKER",
-          codProduto: "R90-P",
-          familia: "Filtros"
-        },
+    // Dicionário de Mocks específicos para manutenção de Caminhões da Construtora
+    const bancoNotasFiscais = {
+      // ITEM 1: Filtro Separador de Água (Essencial para diesel de canteiro de obras)
+      "35260612345678000199550010000011111234567891": {
+        descricao: "Filtro Separador de Combustível (Racor)",
+        marca: "PARKER",
+        codProduto: "R90-P",
+        familia: "Filtros"
+      },
+      "35260612345678000199550010000044441234566794": { // Atalho rápido para digitação no Pitch
+        descricao: "Filtro Separador de Combustível (Racor)",
+        marca: "PARKER",
+        codProduto: "R90-P",
+        familia: "Filtros"
+      },
 
-        // ITEM 2: Sistema de Freios de alta rodagem
-        "35260612345678000199550010000022221234567892": {
-          descricao: "Jogo de Pastilhas de Freio Dianteira (Truck)",
-          marca: "FRAS-LE",
-          codProduto: "PD-522",
-          familia: "Freios"
-        },
-        "2222": {
-          descricao: "Jogo de Pastilhas de Freio Dianteira (Truck)",
-          marca: "FRAS-LE",
-          codProduto: "PD-522",
-          familia: "Freios"
-        },
+      // ITEM 2: Sistema de Freios de alta rodagem
+      "35260612345678000199550010000022221234567892": {
+        descricao: "Jogo de Pastilhas de Freio Dianteira (Truck)",
+        marca: "FRAS-LE",
+        codProduto: "PD-522",
+        familia: "Freios"
+      },
+      "35260612345678000199550010000044441234567943": {
+        descricao: "Jogo de Pastilhas de Freio Dianteira (Truck)",
+        marca: "FRAS-LE",
+        codProduto: "PD-522",
+        familia: "Freios"
+      },
 
-        // ITEM 3: Suspensão Pesada para estradas de terra/obras
-        "35260612345678000199550010000033331234567893": {
-          descricao: "Mola Pneumática da Cabine (Bolsão)",
-          marca: "GOODYEAR",
-          codProduto: "1T15R-6",
-          familia: "Suspensão"
-        },
-        "3333": {
-          descricao: "Mola Pneumática da Cabine (Bolsão)",
-          marca: "GOODYEAR",
-          codProduto: "1T15R-6",
-          familia: "Suspensão"
-        },
+      // ITEM 3: Suspensão Pesada para estradas de terra/obras
+      "35260612345678000199550010000033331234567893": {
+        descricao: "Mola Pneumática da Cabine (Bolsão)",
+        marca: "GOODYEAR",
+        codProduto: "1T15R-6",
+        familia: "Suspensão"
+      },
+      "35260612345678000199550010000044441234567453": {
+        descricao: "Mola Pneumática da Cabine (Bolsão)",
+        marca: "GOODYEAR",
+        codProduto: "1T15R-6",
+        familia: "Suspensão"
+      },
 
-        // ITEM 4: Sistema de Injeção de Motores a Diesel
-        "35260612345678000199550010000044441234567894": {
-          descricao: "Bico Injetor Common Rail Sistema CRDI",
-          marca: "BOSCH",
-          codProduto: "0445120007",
-          familia: "Motor"
-        },
-        "4444": {
-          descricao: "Bico Injetor Common Rail Sistema CRDI",
-          marca: "BOSCH",
-          codProduto: "0445120007",
-          familia: "Motor"
-        },
+      // ITEM 4: Sistema de Injeção de Motores a Diesel
+      "35260612345678000199550010000044441234567894": {
+        descricao: "Bico Injetor Common Rail Sistema CRDI",
+        marca: "BOSCH",
+        codProduto: "0445120007",
+        familia: "Motor"
+      },
+      "35260612345678000199550010000044441234567123": {
+        descricao: "Bico Injetor Common Rail Sistema CRDI",
+        marca: "BOSCH",
+        codProduto: "0445120007",
+        familia: "Motor"
+      },
 
-        // ITEM 5: Correias de Transmissão do Alternador
-        "35260612345678000199550010000055551234567895": {
-          descricao: "Correia do Alternador Poly-V 8PK1635",
-          marca: "GATES",
-          codProduto: "8PK1635",
-          familia: "Correias"
-        },
-        "5555": {
-          descricao: "Correia do Alternador Poly-V 8PK1635",
-          marca: "GATES",
-          codProduto: "8PK1635",
-          familia: "Correias"
-        },
+      // ITEM 5: Correias de Transmissão do Alternador
+      "35260612345678000199550010000055551234567895": {
+        descricao: "Correia do Alternador Poly-V 8PK1635",
+        marca: "GATES",
+        codProduto: "8PK1635",
+        familia: "Correias"
+      },
+      "5555": {
+        descricao: "Correia do Alternador Poly-V 8PK1635",
+        marca: "GATES",
+        codProduto: "8PK1635",
+        familia: "Correias"
+      },
 
-        // O item de rolamento padrão original que você já possuía
-        "35260600012345678901234567890123456789012345": {
-          descricao: "Rolamento de Roda Traseira",
-          marca: "TIMKEN",
-          codProduto: "6205-2RS",
-          familia: "Peças"
-        }
-      };
-
-      // Fluxo lógico de validação e preenchimento
-      if (bancoNotasFiscais[trimmedChave]) {
-        setDescricao(bancoNotasFiscais[trimmedChave].descricao);
-        setMarca(bancoNotasFiscais[trimmedChave].marca);
-        setCodProduto(bancoNotasFiscais[trimmedChave].codProduto);
-        setFamilia(bancoNotasFiscais[trimmedChave].familia);
-        setIsFetched(true);
-      } else if (trimmedChave.length === 44 && /^\d+$/.test(trimmedChave)) {
-        // Comportamento padrão caso usem qualquer outra chave de 44 dígitos numéricos válida
-        setDescricao("Retentor Nitrílico de Cubo de Roda");
-        setMarca("SABÓ");
-        setCodProduto("9102-AR");
-        setFamilia("Retentores");
-        setIsFetched(true);
-      } else {
-        setErrorMsg("Chave de teste não localizada. Use chaves reais ou os atalhos: 1111, 2222, 3333, 4444 ou 5555.");
-        setIsFetched(false);
+      // Correção do alinhamento do ID final 5 para bater com o link de clique rápido da tela
+      "35260600012345678901234567890123456789012345": {
+        descricao: "Rolamento de Roda Traseira",
+        marca: "TIMKEN",
+        codProduto: "6205-2RS",
+        familia: "Peças"
       }
     };
+
+    // Fluxo lógico de validação e preenchimento
+    if (bancoNotasFiscais[trimmedChave]) {
+      setDescricao(bancoNotasFiscais[trimmedChave].descricao);
+      setMarca(bancoNotasFiscais[trimmedChave].marca);
+      setCodProduto(bancoNotasFiscais[trimmedChave].codProduto);
+      setFamilia(bancoNotasFiscais[trimmedChave].familia);
+      setIsFetched(true);
+    } else if (trimmedChave.length === 44 && /^\d+$/.test(trimmedChave)) {
+      // Comportamento padrão caso usem qualquer outra chave de 44 dígitos numéricos válida
+      setDescricao("Retentor Nitrílico de Cubo de Roda");
+      setMarca("SABÓ");
+      setCodProduto("9102-AR");
+      setFamilia("Retentores");
+      setIsFetched(true);
+    } else {
+      setErrorMsg("Chave de teste não localizada. Use as chaves de 44 dígitos, o link auxiliar ou os atalhos: 1111, 2222, 3333, 4444 ou 5555.");
+      setIsFetched(false);
+    }
+  };
 
   // Confirmar Entrada
   const handleConfirmarEntrada = (e) => {
@@ -143,10 +144,72 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
       return;
     }
 
-    // Gerar Cod. Interno aleatório de 1000 a 9999
+    // TRAVA 1: Impede reprocessamento da mesma Nota Fiscal (Segurança Logística)
+    const trimmedChave = chaveNf.trim();
+    if (notasProcessadas.includes(trimmedChave)) {
+      setErrorMsg("Bloqueio Fiscal: Esta Nota Fiscal já foi lançada no sistema e não pode ser reprocessada!");
+      alert("Bloqueio Fiscal: Esta Nota Fiscal já foi lançada na FX Minas Construtora e seu saldo já está computado.");
+      return;
+    }
+
+    // TRAVA 2: Verificar duplicidade de peça por Código do Fabricante
+    const existingProduct = products.find(
+      (p) => p.codProduto.trim().toLowerCase() === codProduto.trim().toLowerCase()
+    );
+
+    if (existingProduct) {
+      // Caso 2A: O produto já existe e já possui uma localização mapeada nas prateleiras
+      if (existingProduct.localizacao && existingProduct.localizacao.trim() !== "") {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === existingProduct.id
+              ? { ...p, quantidade: p.quantidade + Number(quantidade) }
+              : p
+          )
+        );
+
+        // Criar histórico cronológico de movimentações
+        const newMov = {
+          id: "mov-" + Date.now(),
+          tipo: "Entrada NF",
+          descricao: `Entrada via NF Chave (${chaveNf}) — Saldo incrementado na posição ${existingProduct.localizacao}`,
+          codProduto: existingProduct.codProduto,
+          produtoDescricao: `${existingProduct.descricao} (${existingProduct.marca})`,
+          quantidade: Number(quantidade),
+          usuario: "Operador Almoxarifado",
+          dataHora: new Date().toISOString()
+        };
+        setMovements((prev) => [newMov, ...prev]);
+
+        // Adiciona a nota atual à lista de notas processadas para bloqueio futuro
+        setNotasProcessadas((prev) => [...prev, trimmedChave]);
+
+        // Reset completo dos campos do formulário
+        setChaveNf("");
+        setDescricao("");
+        setMarca("");
+        setCodProduto("");
+        setFamilia("");
+        setQuantidade(5);
+        setIsFetched(false);
+
+        alert(`Produto já cadastrado no sistema! A quantidade foi adicionada diretamente à posição ${existingProduct.localizacao}.`);
+        return;
+      } else {
+        // Caso 2B: O produto existe no histórico, mas por algum motivo ficou pendente de localização física
+        const tempProd = {
+          ...existingProduct,
+          quantidade: Number(quantidade) 
+        };
+        setTempProduct(tempProd);
+        setSelectedLocation("P1-A1");
+        setShowLocationModal(true);
+        return;
+      }
+    }
+
+    // Caso 3: O produto é inteiramente inédito no almoxarifado
     const codInterno = Math.floor(1000 + Math.random() * 9000);
-    
-    // ID aleatório
     const id = "prod-" + Date.now();
 
     const newProd = {
@@ -157,11 +220,11 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
       codInterno,
       familia,
       quantidade: Number(quantidade),
-      localizacao: "", // Será definida na próxima etapa
+      localizacao: "", 
     };
 
     setTempProduct(newProd);
-    setSelectedLocation("P1-A1"); // Valor padrão inicial do grid
+    setSelectedLocation("P1-A1"); 
     setShowLocationModal(true);
   };
 
@@ -169,32 +232,69 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
   const handleSalvarLocalizacao = () => {
     if (!tempProduct) return;
 
-    const finalizedProduct = {
-      ...tempProduct,
-      localizacao: selectedLocation
-    };
+    const existingIndex = products.findIndex(
+      (p) => p.codProduto.trim().toLowerCase() === tempProduct.codProduto.trim().toLowerCase()
+    );
 
-    // Verificar se já existe produto com mesmo Cod. Produto. Se sim, podemos acumular ou criar novo
-    // Para fins de MVP, se o produto já existe, vamos atualizar a quantidade e localização, ou adicionar um novo
-    // Vamos adicionar como um novo registro independente no estoque para fins de demonstração de posições físicas diferentes, 
-    // mas se tiver o mesmo código, apenas gera um novo ID físico de lote
-    setProducts((prev) => [finalizedProduct, ...prev]);
+    const trimmedChave = chaveNf.trim();
 
-    // Criar Log de Movimentação
-    const newMov = {
-      id: "mov-" + Date.now(),
-      tipo: "Entrada NF",
-      descricao: `Entrada via NF Chave (${chaveNf}) - Alocado em ${selectedLocation}`,
-      codProduto: finalizedProduct.codProduto,
-      produtoDescricao: `${finalizedProduct.descricao} (${finalizedProduct.marca})`,
-      quantidade: finalizedProduct.quantidade,
-      usuario: "Operador Entrada NF",
-      dataHora: new Date().toISOString()
-    };
+    if (existingIndex !== -1) {
+      // Integração de item existente que estava sem prateleira vinculada
+      const existingProduct = products[existingIndex];
+      
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === existingProduct.id
+            ? { 
+                ...p, 
+                quantidade: p.quantidade + tempProduct.quantidade,
+                localizacao: selectedLocation
+              }
+            : p
+        )
+      );
 
-    setMovements((prev) => [newMov, ...prev]);
+      const newMov = {
+        id: "mov-" + Date.now(),
+        tipo: "Entrada NF",
+        descricao: `Entrada via NF Chave (${chaveNf}) — Vinculado à posição ${selectedLocation} e incrementado`,
+        codProduto: tempProduct.codProduto,
+        produtoDescricao: `${tempProduct.descricao} (${tempProduct.marca})`,
+        quantidade: tempProduct.quantidade,
+        usuario: "Operador Almoxarifado",
+        dataHora: new Date().toISOString()
+      };
+      setMovements((prev) => [newMov, ...prev]);
 
-    // Limpar formulário e fechar modal
+      alert("Produto localizado e atualizado! Nova posição física sincronizada.");
+    } else {
+      // Inserção de registro inédito completa
+      const finalizedProduct = {
+        ...tempProduct,
+        localizacao: selectedLocation
+      };
+
+      setProducts((prev) => [finalizedProduct, ...prev]);
+
+      const newMov = {
+        id: "mov-" + Date.now(),
+        tipo: "Entrada NF",
+        descricao: `Entrada de novo item via NF Chave (${chaveNf}) — Alocado na posição ${selectedLocation}`,
+        codProduto: finalizedProduct.codProduto,
+        produtoDescricao: `${finalizedProduct.descricao} (${finalizedProduct.marca})`,
+        quantidade: finalizedProduct.quantidade,
+        usuario: "Operador Almoxarifado",
+        dataHora: new Date().toISOString()
+      };
+      setMovements((prev) => [newMov, ...prev]);
+
+      alert(`Item cadastrado com sucesso!\nCód. Interno Gerado: #${finalizedProduct.codInterno}\nLocalização: ${finalizedProduct.localizacao}`);
+    }
+
+    // Sela a Nota Fiscal no estado impedindo reuso em transações subsequentes
+    setNotasProcessadas((prev) => [...prev, trimmedChave]);
+
+    // Limpeza operacional completa de formulários e estados temporários
     setChaveNf("");
     setDescricao("");
     setMarca("");
@@ -204,8 +304,6 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
     setIsFetched(false);
     setShowLocationModal(false);
     setTempProduct(null);
-
-    alert(`Item registrado com sucesso no estoque!\nCód. Interno Gerado: #${finalizedProduct.codInterno}\nLocalização: ${finalizedProduct.localizacao}`);
   };
 
   return (
@@ -231,12 +329,12 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-600 uppercase">
-              Chave de Acesso (44 dígitos)
+              Chave de Acesso ou Atalho de Teste
             </label>
             <div className="relative">
               <input
                 type="text"
-                placeholder="Insira a chave de 44 dígitos"
+                placeholder="Ex: 1111, 2222 ou a Chave Completa"
                 value={chaveNf}
                 onChange={(e) => setChaveNf(e.target.value)}
                 maxLength={44}
@@ -244,7 +342,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
               />
             </div>
             <p className="text-[10px] text-gray-400">
-              Clique <span className="font-bold text-orange-600 cursor-pointer underline hover:text-orange-700" onClick={() => setChaveNf("35260600012345678901234567890123456789012345")}>aqui</span> para preencher a chave de simulação.
+              Clique <span className="font-bold text-orange-600 cursor-pointer underline hover:text-orange-700" onClick={() => setChaveNf("35260600012345678901234567890123456789012345")}>aqui</span> para preencher o código de simulação padrão.
             </p>
           </div>
 
@@ -378,7 +476,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
                   Triagem Logística: Prateleira Virtual
                 </h4>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Item: {tempProduct.descricao} ({tempProduct.marca}) - Cód. Interno Gerado: <span className="font-bold text-white">#{tempProduct.codInterno}</span>
+                  Item: {tempProduct.descricao} ({tempProduct.marca}) - Cód. Interno: <span className="font-bold text-white">#{tempProduct.codInterno || "EXISTENTE"}</span>
                 </p>
               </div>
             </div>

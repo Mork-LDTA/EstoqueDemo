@@ -2,20 +2,20 @@ import React, { useState } from "react";
 import { 
   FileText, 
   FileCode, 
-  Download, 
   Clock, 
   User, 
   ArrowUpRight, 
   ArrowDownLeft, 
   RefreshCw,
-  CheckCircle2
+  CheckCircle2,
+  Package 
 } from "lucide-react";
 
 export default function Relatorios({ movements, products = [] }) {
   // Estado para controle de Toast/Mensagem de Exportação
   const [toastMessage, setToastMessage] = useState("");
 
-  // Função para simular a exportação do XML
+  // Função para simular a exportação do XML (CORRIGIDO: Agora com tag de Quantidade)
   const handleExportXML = () => {
     if (!products || products.length === 0) {
       alert("Nenhum produto em estoque para exportar.");
@@ -34,6 +34,7 @@ export default function Relatorios({ movements, products = [] }) {
       xmlContent += `      <codigo_interno>${p.codInterno}</codigo_interno>\n`;
       xmlContent += `      <familia_grupo>${p.familia}</familia_grupo>\n`;
       xmlContent += `      <localizacao>${p.localizacao || 'Não alocado'}</localizacao>\n`;
+      xmlContent += `      <quantidade>${p.quantidade}</quantidade>\n`; // Injeção da Quantidade no XML
       xmlContent += '    </produto>\n';
     });
 
@@ -51,7 +52,7 @@ export default function Relatorios({ movements, products = [] }) {
     setTimeout(() => setToastMessage(""), 4000);
   };
 
-  // Exportação Analítica e Download Direto do PDF (Usa html2pdf via CDN)
+  // Exportação Analítica e Download Direto do PDF (CORRIGIDO: Agora com coluna de Qtd)
   const exportarParaPDF = () => {
     if (!products || products.length === 0) {
       alert("Nenhum produto em estoque para exportar.");
@@ -72,7 +73,7 @@ export default function Relatorios({ movements, products = [] }) {
     
     const anoAtual = new Date().getFullYear();
 
-    // Monta as linhas da tabela em formato de string HTML pura com estilos inline para o PDF
+    // Monta as linhas da tabela incluindo a nova célula de quantidade (Qtd)
     const rowsHtml = products.map(item => `
         <tr style="border-bottom: 1px solid #e2e8f0;">
           <td style="padding: 10px 12px; font-family: monospace; font-size: 11px; font-weight: 600; color: #0f172a;">#${item.codInterno}</td>
@@ -86,10 +87,10 @@ export default function Relatorios({ movements, products = [] }) {
               : `<span style="background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 2px 6px; font-size: 9px; font-weight: 700; border-radius: 4px; text-transform: uppercase;">Não Alocado</span>`
             }
           </td>
+          <td style="padding: 10px 12px; font-size: 11px; font-weight: 700; color: #0f172a; text-align: center;">${item.quantidade}</td>
         </tr>
       `).join("");
 
-    // Cria um elemento HTML temporário fora da tela apenas para renderizar o PDF estruturado
     const elementoRelatorio = document.createElement("div");
     elementoRelatorio.style.padding = "24px";
     elementoRelatorio.style.fontFamily = "'Inter', sans-serif";
@@ -125,12 +126,13 @@ export default function Relatorios({ movements, products = [] }) {
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
         <thead>
           <tr style="background-color: #0f172a;">
-            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left;">Cód. Interno</th>
-            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left;">Descrição</th>
-            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left;">Marca</th>
-            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left;">Cód. Fabricante</th>
-            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left;">Grupo / Família</th>
-            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left;">Localização</th>
+            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left; width: 12%;">Cód. Interno</th>
+            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left; width: 25%;">Descrição</th>
+            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left; width: 13%;">Marca</th>
+            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left; width: 17%;">Cód. Fabricante</th>
+            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left; width: 13%;">Grupo / Família</th>
+            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left; width: 13%;">Localização</th>
+            <th style="color: #ffffff; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: center; width: 7%;">Qtd</th>
           </tr>
         </thead>
         <tbody>
@@ -143,7 +145,6 @@ export default function Relatorios({ movements, products = [] }) {
       </div>
     `;
 
-    // Função interna que executa a geração do PDF real e o download automático
     const executarDownloadPDF = () => {
       const opcoesConfig = {
         margin: 10,
@@ -159,14 +160,13 @@ export default function Relatorios({ movements, products = [] }) {
       });
     };
 
-    // Verifica se a biblioteca injetada já existe na Window, senão carrega via script inline na hora
     if (!window.html2pdf) {
       const scriptCDN = document.createElement("script");
       scriptCDN.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
       scriptCDN.onload = executarDownloadPDF;
       document.head.appendChild(scriptCDN);
     } else {
-      executarDownloadPDF;
+      executarDownloadPDF();
     }
   };
 
@@ -179,7 +179,7 @@ export default function Relatorios({ movements, products = [] }) {
             Relatórios e Logs de Movimentação
           </h2>
           <p className="text-sm text-gray-600">
-            Acompanhe o histórico de todas as transações, remanejamentos e retiradas realizadas no sistema.
+            Acompanhe a posição em tempo real do estoque físico e o histórico cronológico de transações do almoxarifado.
           </p>
         </div>
         
@@ -213,6 +213,77 @@ export default function Relatorios({ movements, products = [] }) {
           </div>
         </div>
       )}
+
+      {/* LISTAGEM DO INVENTÁRIO ATUAL (ESTOQUE NA TELA) */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+          <h3 className="font-extrabold text-gray-950 text-sm uppercase tracking-wider flex items-center space-x-2">
+            <Package size={16} className="text-orange-500" />
+            <span>Posição Geral do Inventário ({products.length} itens cadastrados)</span>
+          </h3>
+        </div>
+
+        <div className="overflow-x-auto">
+          {products.length === 0 ? (
+            <div className="text-center py-12 text-gray-500 italic text-sm">
+              Nenhum produto cadastrado no inventário físico da construtora.
+            </div>
+          ) : (
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 text-gray-500 font-bold text-xs uppercase bg-gray-50/50">
+                  <th className="py-3.5 px-6">Cód. Interno</th>
+                  <th className="py-3.5 px-6">Descrição</th>
+                  <th className="py-3.5 px-6">Marca</th>
+                  <th className="py-3.5 px-6">Cód. Fabricante</th>
+                  <th className="py-3.5 px-6">Família</th>
+                  <th className="py-3.5 px-6">Localização</th>
+                  <th className="py-3.5 px-6 text-center">Qtd</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-150">
+                {products.map((item) => (
+                  <tr key={item.id || item.codInterno} className="hover:bg-gray-50/80 transition-colors font-medium">
+                    <td className="py-4 px-6 font-mono text-xs font-bold text-orange-600">
+                      #{item.codInterno}
+                    </td>
+                    <td className="py-4 px-6 text-gray-950 font-bold">
+                      {item.descricao}
+                    </td>
+                    <td className="py-4 px-6 text-gray-700">
+                      {item.marca}
+                    </td>
+                    <td className="py-4 px-6 font-mono text-xs text-gray-600">
+                      {item.codProduto}
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5 rounded border border-gray-200 uppercase">
+                        {item.familia}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      {item.localizacao && item.localizacao.trim() !== "" ? (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border bg-orange-50 border-orange-200 text-orange-700 font-mono">
+                          📍 {item.localizacao}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border bg-gray-50 border-gray-200 text-gray-400 uppercase tracking-wider">
+                          Não Alocado
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <span className="font-black text-gray-950 bg-gray-50 border border-gray-200 px-3 py-1 rounded-md">
+                        {item.quantidade}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
 
       {/* Histórico/Log de Movimentações */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">

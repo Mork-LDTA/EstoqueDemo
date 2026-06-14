@@ -18,6 +18,37 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
   const [aplicacao, setAplicacao] = useState("");
   const [quantidade, setQuantidade] = useState(1);
 
+  // Estados de Busca e Visibilidade do Dropdown
+  const [productSearch, setProductSearch] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Filtragem e ordenação inteligente dos produtos
+  const searchTrimmed = productSearch.trim().toLowerCase();
+  const filteredProductsForSelect = products.filter(p => {
+    if (!searchTrimmed) return true;
+    return (
+      p.descricao.toLowerCase().includes(searchTrimmed) ||
+      p.codProduto.toLowerCase().includes(searchTrimmed) ||
+      p.codInterno.toString().toLowerCase().includes(searchTrimmed)
+    );
+  });
+
+  if (searchTrimmed) {
+    filteredProductsForSelect.sort((a, b) => {
+      const exactA = 
+        a.codProduto.toLowerCase() === searchTrimmed ||
+        a.codInterno.toString().toLowerCase() === searchTrimmed;
+        
+      const exactB = 
+        b.codProduto.toLowerCase() === searchTrimmed ||
+        b.codInterno.toString().toLowerCase() === searchTrimmed;
+        
+      if (exactA && !exactB) return -1;
+      if (!exactA && exactB) return 1;
+      return 0;
+    });
+  }
+
   // Mensagens de Erro e Sucesso
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -103,6 +134,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     setEquipamento("");
     setProblema("");
     setSelectedProductId("");
+    setProductSearch("");
     setAplicacao("");
     setQuantidade(1);
 
@@ -198,24 +230,93 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                 />
               </div>
 
-              {/* Seleção do Produto */}
-              <div className="space-y-1">
+              {/* Seleção do Produto com Busca Avançada */}
+              <div className="space-y-1 relative">
                 <label className="text-xs font-bold text-gray-500 uppercase">
                   Produto para Retirada
                 </label>
-                <select
-                  value={selectedProductId}
-                  onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2.5 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"
-                  required
-                >
-                  <option value="">Selecione um item...</option>
-                  {products.map(p => (
-                    <option key={p.id} value={p.id} disabled={p.quantidade <= 0}>
-                      {p.descricao} ({p.marca}) — #{p.codInterno} [Disponível: {p.quantidade}]
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Pesquise por Nome, Fabricante ou Código Interno..."
+                    value={productSearch}
+                    onChange={(e) => {
+                      setProductSearch(e.target.value);
+                      setIsOpen(true);
+                      if (!e.target.value) {
+                        setSelectedProductId("");
+                      }
+                    }}
+                    onFocus={() => setIsOpen(true)}
+                    onBlur={() => {
+                      // Pequeno delay para permitir clique nas opções do dropdown
+                      setTimeout(() => setIsOpen(false), 200);
+                    }}
+                    className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white transition-colors"
+                    required
+                  />
+                  {selectedProductId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedProductId("");
+                        setProductSearch("");
+                        setIsOpen(false);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 font-black text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {isOpen && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto divide-y divide-gray-100">
+                    {filteredProductsForSelect.length === 0 ? (
+                      <div className="p-3 text-xs text-gray-500 text-center">
+                        Nenhum produto correspondente.
+                      </div>
+                    ) : (
+                      filteredProductsForSelect.map((p) => {
+                        const isDisabled = p.quantidade <= 0;
+                        const isExactMatch = searchTrimmed && (
+                          p.codProduto.toLowerCase() === searchTrimmed ||
+                          p.codInterno.toString().toLowerCase() === searchTrimmed
+                        );
+
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            disabled={isDisabled}
+                            onMouseDown={() => {
+                              setSelectedProductId(p.id);
+                              setProductSearch(`${p.descricao} (${p.marca})`);
+                              setIsOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 hover:bg-orange-50/50 flex flex-col space-y-1 transition-colors ${
+                              isDisabled ? "opacity-50 cursor-not-allowed bg-gray-50" : ""
+                            } ${isExactMatch ? "bg-orange-50/80 border-l-4 border-l-orange-500" : ""}`}
+                          >
+                            <div className="flex justify-between items-center w-full">
+                              <span className="font-bold text-xs text-gray-950">
+                                {p.descricao} ({p.marca})
+                              </span>
+                              {isExactMatch && (
+                                <span className="bg-orange-500 text-black text-[9px] font-black uppercase px-1.5 py-0.5 rounded leading-none">
+                                  Match Exato
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-gray-500 font-medium">
+                              Fab: <span className="font-mono text-gray-700 font-bold">{p.codProduto}</span> • Int: <span className="font-mono text-gray-700 font-bold">#{p.codInterno}</span> • Estoque: <span className={`font-black ${p.quantidade < 3 ? "text-red-600" : "text-gray-900"}`}>{p.quantidade}</span> un
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Descrição do Problema */}

@@ -15,10 +15,25 @@ export default function Relatorios({ movements, products = [] }) {
   // Estado para controle de Toast/Mensagem de Exportação
   const [toastMessage, setToastMessage] = useState("");
 
-  // Função para simular a exportação do XML (CORRIGIDO: Agora com tag de Quantidade)
+  // Estados para Filtros
+  const [selectedFamily, setSelectedFamily] = useState("all");
+  const [selectedBrand, setSelectedBrand] = useState("all");
+
+  // Famílias e marcas dinâmicas baseadas no estoque real
+  const families = ["all", ...new Set(products.map(p => p.familia).filter(Boolean))];
+  const brands = ["all", ...new Set(products.map(p => p.marca).filter(Boolean))];
+
+  // Filtragem dinâmica dos produtos em tempo real
+  const filteredProducts = products.filter(p => {
+    const matchesFamily = selectedFamily === "all" || p.familia === selectedFamily;
+    const matchesBrand = selectedBrand === "all" || p.marca === selectedBrand;
+    return matchesFamily && matchesBrand;
+  });
+
+  // Função para simular a exportação do XML (com suporte a filtros)
   const handleExportXML = () => {
-    if (!products || products.length === 0) {
-      alert("Nenhum produto em estoque para exportar.");
+    if (!filteredProducts || filteredProducts.length === 0) {
+      alert("Nenhum produto correspondente aos filtros para exportar.");
       return;
     }
 
@@ -26,7 +41,7 @@ export default function Relatorios({ movements, products = [] }) {
     xmlContent += `  <data_geracao>${new Date().toLocaleString('pt-BR')}</data_geracao>\n`;
     xmlContent += '  <produtos>\n';
 
-    products.forEach(p => {
+    filteredProducts.forEach(p => {
       xmlContent += '    <produto>\n';
       xmlContent += `      <descricao>${p.descricao}</descricao>\n`;
       xmlContent += `      <marca>${p.marca}</marca>\n`;
@@ -34,7 +49,7 @@ export default function Relatorios({ movements, products = [] }) {
       xmlContent += `      <codigo_interno>${p.codInterno}</codigo_interno>\n`;
       xmlContent += `      <familia_grupo>${p.familia}</familia_grupo>\n`;
       xmlContent += `      <localizacao>${p.localizacao || 'Não alocado'}</localizacao>\n`;
-      xmlContent += `      <quantidade>${p.quantidade}</quantidade>\n`; // Injeção da Quantidade no XML
+      xmlContent += `      <quantidade>${p.quantidade}</quantidade>\n`;
       xmlContent += '    </produto>\n';
     });
 
@@ -52,16 +67,16 @@ export default function Relatorios({ movements, products = [] }) {
     setTimeout(() => setToastMessage(""), 4000);
   };
 
-  // Exportação Analítica e Download Direto do PDF (CORRIGIDO: Agora com coluna de Qtd)
+  // Exportação Analítica e Download Direto do PDF (com suporte a filtros)
   const exportarParaPDF = () => {
-    if (!products || products.length === 0) {
-      alert("Nenhum produto em estoque para exportar.");
+    if (!filteredProducts || filteredProducts.length === 0) {
+      alert("Nenhum produto correspondente aos filtros para exportar.");
       return;
     }
 
-    const totalItens = products.length;
-    const alocados = products.filter(p => p.localizacao && p.localizacao.trim() !== "").length;
-    const pendentes = products.filter(p => !p.localizacao || p.localizacao.trim() === "").length;
+    const totalItens = filteredProducts.length;
+    const alocados = filteredProducts.filter(p => p.localizacao && p.localizacao.trim() !== "").length;
+    const pendentes = filteredProducts.filter(p => !p.localizacao || p.localizacao.trim() === "").length;
     
     const dataHoraAtual = new Date().toLocaleString("pt-BR", {
       day: "2-digit",
@@ -73,8 +88,8 @@ export default function Relatorios({ movements, products = [] }) {
     
     const anoAtual = new Date().getFullYear();
 
-    // Monta as linhas da tabela incluindo a nova célula de quantidade (Qtd)
-    const rowsHtml = products.map(item => `
+    // Monta as linhas da tabela filtrada
+    const rowsHtml = filteredProducts.map(item => `
         <tr style="border-bottom: 1px solid #e2e8f0;">
           <td style="padding: 10px 12px; font-family: monospace; font-size: 11px; font-weight: 600; color: #0f172a;">#${item.codInterno}</td>
           <td style="padding: 10px 12px; font-size: 11px; font-weight: 600; color: #0f172a;">${item.descricao}</td>
@@ -219,14 +234,43 @@ export default function Relatorios({ movements, products = [] }) {
         <div className="p-5 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
           <h3 className="font-extrabold text-gray-950 text-sm uppercase tracking-wider flex items-center space-x-2">
             <Package size={16} className="text-orange-500" />
-            <span>Posição Geral do Inventário ({products.length} itens cadastrados)</span>
+            <span>Posição Geral do Inventário ({filteredProducts.length} de {products.length} itens)</span>
           </h3>
         </div>
 
+        {/* Barra de Filtros Dinâmicos */}
+        <div className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50/50 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Grupo/Família:</label>
+            <select
+              value={selectedFamily}
+              onChange={(e) => setSelectedFamily(e.target.value)}
+              className="bg-white border border-gray-200 text-gray-950 px-3 py-1.5 rounded-lg text-xs font-semibold focus:outline-none focus:border-orange-500 w-full sm:w-44"
+            >
+              {families.map(f => (
+                <option key={f} value={f}>{f === "all" ? "Todas as Famílias" : f}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Marca:</label>
+            <select
+              value={selectedBrand}
+              onChange={(e) => setSelectedBrand(e.target.value)}
+              className="bg-white border border-gray-200 text-gray-950 px-3 py-1.5 rounded-lg text-xs font-semibold focus:outline-none focus:border-orange-500 w-full sm:w-44"
+            >
+              {brands.map(b => (
+                <option key={b} value={b}>{b === "all" ? "Todas as Marcas" : b}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
-          {products.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="text-center py-12 text-gray-500 italic text-sm">
-              Nenhum produto cadastrado no inventário físico da construtora.
+              Nenhum produto encontrado com os filtros selecionados.
             </div>
           ) : (
             <table className="w-full text-left text-sm border-collapse">
@@ -242,7 +286,7 @@ export default function Relatorios({ movements, products = [] }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-150">
-                {products.map((item) => (
+                {filteredProducts.map((item) => (
                   <tr key={item.id || item.codInterno} className="hover:bg-gray-50/80 transition-colors font-medium">
                     <td className="py-4 px-6 font-mono text-xs font-bold text-orange-600">
                       #{item.codInterno}

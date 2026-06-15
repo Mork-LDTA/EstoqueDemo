@@ -80,7 +80,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     return matchId && matchData && matchRemetente && matchDestinatario;
   });
 
-  // --- FUNÇÃO PARA GERAR E BAIXAR O TERMO EXECUTÁVEL EM HTML ---
+// --- FUNÇÃO ATUALIZADA COM ESPAÇAMENTO MÁXIMO NO CPF ---
   const handlePrintOs = (os) => {
     const prod = products.find(p => p.codProduto === os.codProduto) || {
       descricao: os.produtoDescricao.split(" (")[0],
@@ -95,17 +95,15 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
       <html>
         <head>
           <meta charset="UTF-8">
-          
           <title>Termo de Retirada - ${os.id}</title>
           <style>
             @page {
-            size: auto;
-            margin: 0mm; 
+              size: auto;
+              margin: 0mm;
             }
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
             body {
-              font-family: 'Inter', sans-serif;
-              color: #111827;
+              font-family: 'Arial', 'Helvetica', sans-serif;
+              color: #000000;
               background-color: #ffffff;
               margin: 0;
               padding: 40px;
@@ -116,10 +114,10 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 20px;
-              border: 2px solid #111827;
+              border: 2px solid #000000;
             }
             .header-table td {
-              border: 1px solid #111827;
+              border: 1px solid #000000;
               padding: 10px;
               vertical-align: middle;
             }
@@ -129,7 +127,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               letter-spacing: 0.5px;
             }
             .doc-title {
-              font-size: 12px;
+              font-size: 11px;
               font-weight: 700;
               text-align: center;
               text-transform: uppercase;
@@ -148,26 +146,26 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               font-size: 10px;
               font-weight: 800;
               text-transform: uppercase;
-              background-color: #f3f4f6;
-              padding: 5px 8px;
-              border: 1px solid #111827;
+              background-color: #e5e7eb;
+              padding: 6px 10px;
+              border: 2px solid #000000;
               border-bottom: none;
               margin-top: 15px;
             }
             .info-table {
               width: 100%;
               border-collapse: collapse;
-              border: 1px solid #111827;
+              border: 2px solid #000000;
               margin-bottom: 15px;
             }
             .info-table td {
-              border: 1px solid #111827;
-              padding: 8px 10px;
+              border: 1px solid #000000;
+              padding: 10px;
               width: 50%;
               vertical-align: top;
             }
             .info-table p {
-              margin: 3px 0;
+              margin: 4px 0;
             }
             .info-table span {
               font-weight: 700;
@@ -175,76 +173,79 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
             .items-table {
               width: 100%;
               border-collapse: collapse;
-              border: 1px solid #111827;
+              border: 2px solid #000000;
               margin-top: -1px;
               margin-bottom: 15px;
             }
             .items-table th {
-              border: 1px solid #111827;
+              border: 1px solid #000000;
               background-color: #f3f4f6;
               font-weight: 800;
               text-transform: uppercase;
               font-size: 9px;
-              padding: 6px 8px;
+              padding: 8px;
               text-align: left;
             }
             .items-table td {
-              border: 1px solid #111827;
-              padding: 6px 8px;
-              font-size: 10px;
+              border: 1px solid #000000;
+              padding: 8px;
+              font-size: 11px;
             }
             .clause-box {
-              border: 1px solid #111827;
+              border: 2px solid #000000;
               padding: 12px;
-              font-size: 10px;
+              font-size: 10.5px;
               text-align: justify;
               margin-top: -1px;
-              line-height: 1.4;
+              line-height: 1.5;
               margin-bottom: 40px;
             }
             .signatures-table {
               width: 100%;
               border-collapse: collapse;
-              margin-top: 40px;
+              margin-top: 65px;
             }
             .signatures-table td {
               width: 50%;
               text-align: center;
               vertical-align: bottom;
-              padding: 0 20px;
+              padding: 0 15px;
               border: none;
             }
             .line-draw {
-              border-top: 1px solid #000;
-              width: 85%;
+              border-top: 1px solid #000000;
+              width: 90%;
               margin: 0 auto 5px auto;
             }
             .signature-label {
               font-size: 9px;
               font-weight: 700;
               text-transform: uppercase;
-              white-space: pre-line;
             }
-            @media print {
-              body {
-                padding: 10px;
-              }
+            /* Margem ampliada para criar um vão confortável para escrita manual */
+            .cpf-field {
+              font-weight: 400;
+              font-size: 8.5px;
+              color: #444444;
+              display: block;
+              margin-top: 24px; /* Espaço amplo e nítido entre o rótulo e o campo */
+              letter-spacing: 0.5px;
             }
           </style>
         </head>
         <body>
           <table class="header-table">
             <tr>
-              <td style="width: 35%;">
-                <div class="company-name">FX MINAS CONSTRUTORA LTDA</div>
-                <div style="font-size: 8px; color: #4b5563;">DEPARTAMENTO DE LOGÍSTICA & ALMOXARIFADO</div>
-              </td>
               <td style="width: 40%;">
+                <div class="company-name">FX MINAS CONSTRUTORA LTDA</div>
+                <div style="font-size: 8px; color: #555555; font-weight: 600; margin-top: 2px;">DEPARTAMENTO DE LOGÍSTICA & ALMOXARIFADO</div>
+              </td>
+              <td style="width: 35%;">
                 <div class="doc-title">TERMO DE RESPONSABILIDADE E RETIRADA DE MATERIAIS</div>
               </td>
               <td style="width: 25%;" class="control-info">
                 <div>Nº CONTROLE: <span class="os-id">${os.id}</span></div>
-                <div style="margin-top: 4px;">EMISSÃO: ${dateFormatted}</div>
+                <div style="margin-top: 4px; color: #444444;">EMISSÃO: ${dateFormatted}</div>
               </td>
             </tr>
           </table>
@@ -258,7 +259,8 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               </td>
               <td>
                 <p><span>SOLICITANTE / RECEBEDOR:</span> ${os.solicitante}</p>
-                <p><span>FUNÇÃO OU CARGO (RECEBEDOR):</span> ${os.recebedor} (${os.equipamento})</p>
+                <p><span>FUNÇÃO / CARGO:</span> ${os.recebedor}</p>
+                <p><span>EQUIPAMENTO ALVO:</span> ${os.equipamento}</p>
                 <p><span>APLICAÇÃO:</span> ${os.aplicacao}</p>
               </td>
             </tr>
@@ -268,12 +270,12 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
           <table class="items-table">
             <thead>
               <tr>
-                <th style="width: 5%; text-align: center;">Item</th>
-                <th style="width: 40%;">Descrição do Produto</th>
-                <th style="width: 15%;">Marca</th>
-                <th style="width: 15%;">Ref. Fabricante</th>
-                <th style="width: 15%;">Cód. Interno</th>
-                <th style="width: 10%; text-align: center;">Qtd Retirada</th>
+                <th style="width: 8%; text-align: center; color: #000000;">Item</th>
+                <th style="width: 42%; color: #000000;">Descrição do Produto</th>
+                <th style="width: 15%; color: #000000;">Marca</th>
+                <th style="width: 15%; color: #000000;">Ref. Fabricante</th>
+                <th style="width: 12%; color: #000000;">Cód. Int</th>
+                <th style="width: 10%; text-align: center; color: #000000;">Qtd</th>
               </tr>
             </thead>
             <tbody>
@@ -283,25 +285,31 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                 <td>${prod.marca || "---"}</td>
                 <td style="font-family: monospace;">${os.codProduto}</td>
                 <td style="font-family: monospace;">#${prod.codInterno}</td>
-                <td style="text-align: center; font-weight: bold; font-size: 11px;">${os.quantidade}</td>
+                <td style="text-align: center; font-weight: 900; font-size: 12px;">${os.quantidade}</td>
               </tr>
             </tbody>
           </table>
 
           <div class="section-header">Bloco 3 - Cláusula de Compromisso e Responsabilidade</div>
           <div class="clause-box">
-            Declaro para os devidos fins que recebi em perfeito estado os materiais acima listados, assumindo total responsabilidade pelo uso adequado, aplicação na respectiva ordem de serviço e guarda dos mesmos.
+            Declaro para os devidos fins que recebi em perfeito estado os materiais acima listados, assumindo total responsabilidade pelo uso adequado, aplicação na respectiva ordem de serviço e guarda dos mesmos conforme as diretrizes de segurança da construtora.
           </div>
 
           <table class="signatures-table">
             <tr>
               <td>
                 <div class="line-draw"></div>
-                <div class="signature-label">SOLICITANTE / RECEBEDOR<br><span style="font-weight: 400; font-size: 8px; color: #4b5563;">CPF/RE: ______________________________</span></div>
+                <div class="signature-label">
+                  SOLICITANTE / RECEBEDOR
+                  <span class="cpf-field">CPF/RE: _____________________________________</span>
+                </div>
               </td>
               <td>
                 <div class="line-draw"></div>
-                <div class="signature-label">RESPONSÁVEL PELA LIBERAÇÃO<br><span style="font-weight: 400; font-size: 8px; color: #4b5563;">ALMOXARIFADO CENTRAL</span></div>
+                <div class="signature-label">
+                  RESPONSÁVEL ALMOXARIFADO
+                  <span style="font-weight: 400; font-size: 8px; color: #555555; display: block; margin-top: 24px;">FX MINAS CONSTRUTORA</span>
+                </div>
               </td>
             </tr>
           </table>
@@ -325,7 +333,6 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
   // --- SUBMETER CADASTRO DE NOVA ORDEM DE SERVIÇO ---
   const handleSubmitOs = (e) => {
     e.preventDefault();

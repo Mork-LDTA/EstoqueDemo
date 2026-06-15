@@ -16,7 +16,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
   // Estados do Formulário de Cadastro
   const [solicitante, setSolicitante] = useState("");
   const [recebedor, setRecebedor] = useState("");
-  const [equipamento, setEquipamento] = useState("");
+  const [funcaoRecebedor, setFuncaoRecebedor] = useState("");
   const [problema, setProblema] = useState("");
   const [selectedProductId, setSelectedProductId] = useState("");
   const [aplicacao, setAplicacao] = useState("");
@@ -254,13 +254,12 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
           <table class="info-table">
             <tr>
               <td>
-                <p><span>RESPONSÁVEL PELA LIBERAÇÃO:</span> Almoxarife</p>
+                <p><span>RESPONSÁVEL PELA LIBERAÇÃO:</span> ${os.solicitante}</p>
                 <p><span>DEPARTAMENTO:</span> Almoxarifado Central</p>
               </td>
               <td>
-                <p><span>SOLICITANTE / RECEBEDOR:</span> ${os.solicitante}</p>
-                <p><span>FUNÇÃO / CARGO:</span> ${os.recebedor}</p>
-                <p><span>EQUIPAMENTO ALVO:</span> ${os.equipamento}</p>
+                <p><span>SOLICITANTE / RECEBEDOR:</span> ${os.recebedor}</p>
+                <p><span>FUNÇÃO / CARGO:</span> ${os.funcaoRecebedor}</p>
                 <p><span>APLICAÇÃO:</span> ${os.aplicacao}</p>
               </td>
             </tr>
@@ -339,7 +338,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     setErrorMsg("");
     setSuccessMsg("");
 
-    if (!solicitante || !recebedor || !equipamento || !problema || !selectedProductId || !aplicacao || !quantidade) {
+    if (!solicitante || !recebedor || !funcaoRecebedor || !problema || !selectedProductId || !aplicacao || !quantidade) {
       setErrorMsg("Por favor, preencha todos os campos da Ordem de Serviço.");
       return;
     }
@@ -367,7 +366,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
       id: osId,
       solicitante,
       recebedor,
-      equipamento,
+      funcaoRecebedor,
       problema,
       codProduto: selectedProduct.codProduto,
       produtoDescricao: `${selectedProduct.descricao} (${selectedProduct.marca})`,
@@ -402,7 +401,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
 
     setSolicitante("");
     setRecebedor("");
-    setEquipamento("");
+    setFuncaoRecebedor("");
     setProblema("");
     setSelectedProductId("");
     setProductSearch("");
@@ -489,8 +488,8 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                 <input
                   type="text"
                   placeholder="Ex: Supervisor de Manutenção"
-                  value={equipamento}
-                  onChange={(e) => setEquipamento(e.target.value)}
+                  value={funcaoRecebedor}
+                  onChange={(e) => setFuncaoRecebedor(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
                   required
                 />
@@ -751,7 +750,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                     <td className="py-3 px-4 text-gray-950 font-semibold">{os.solicitante}</td>
                     <td className="py-3 px-4">
                       <p className="text-gray-950 font-semibold">{os.recebedor}</p>
-                      <p className="text-[10px] text-gray-400 uppercase font-bold">{os.equipamento}</p>
+                      <p className="text-[10px] text-gray-400 uppercase font-bold">{os.funcaoRecebedor}</p>
                     </td>
                     <td className="py-3 px-4">
                       <p className="text-gray-950 font-bold"><span className="text-orange-600 font-black">{os.quantidade}x</span> {os.produtoDescricao}</p>

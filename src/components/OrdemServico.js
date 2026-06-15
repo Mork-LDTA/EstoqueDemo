@@ -9,22 +9,26 @@ import {
   Printer,
   History,
   SlidersHorizontal,
-  FileText
+  FileText,
+  Trash2
 } from "lucide-react";
 
 export default function OrdemServico({ products, setProducts, osList, setOsList, movements, setMovements }) {
-  // Estados do Formulário de Cadastro
+  // Estados do Formulário de Cadastro (Cabeçalho)
   const [solicitante, setSolicitante] = useState("");
   const [recebedor, setRecebedor] = useState("");
   const [funcaoRecebedor, setFuncaoRecebedor] = useState("");
   const [problema, setProblema] = useState("");
-  const [selectedProductId, setSelectedProductId] = useState("");
   const [aplicacao, setAplicacao] = useState("");
-  const [quantidade, setQuantidade] = useState(1);
 
-  // Estados de Busca e Visibilidade do Dropdown no Formulário
+  // Estados do Produto Selecionado na Fila
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [quantidade, setQuantidade] = useState(1);
   const [productSearch, setProductSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+
+  // Fila de Retirada (Carrinho Temporário)
+  const [cartItems, setCartItems] = useState([]);
 
   // Estados dos Filtros do Histórico Inferior
   const [filterId, setFilterId] = useState("");
@@ -32,7 +36,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
   const [filterRemetente, setFilterRemetente] = useState("");
   const [filterDestinatario, setFilterDestinatario] = useState("");
 
-  // Mensagens de Erro e Sucesso do Formulário
+  // Mensagens de Erro e Sucesso
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -69,27 +73,51 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
   // --- LOGICA DE FILTRAGEM DO HISTÓRICO INFERIOR ---
   const filteredOSHistory = osList.filter(os => {
     const matchId = filterId.trim() ? os.id.toLowerCase().includes(filterId.trim().toLowerCase()) : true;
-    
-    // Filtro de data comparando apenas a parte YYYY-MM-DD
-    const osDataISO = os.dataHora.split("T")[0];
+    const osDataISO = os.dataHora ? os.dataHora.split("T")[0] : "";
     const matchData = filterData ? osDataISO === filterData : true;
-    
     const matchRemetente = filterRemetente.trim() ? os.solicitante.toLowerCase().includes(filterRemetente.trim().toLowerCase()) : true;
     const matchDestinatario = filterDestinatario.trim() ? os.recebedor.toLowerCase().includes(filterDestinatario.trim().toLowerCase()) : true;
 
     return matchId && matchData && matchRemetente && matchDestinatario;
   });
 
-// --- FUNÇÃO ATUALIZADA COM ESPAÇAMENTO MÁXIMO NO CPF ---
+  // --- IMPRESSÃO DO TERMO DE RESPONSABILIDADE ---
   const handlePrintOs = (os) => {
-    const prod = products.find(p => p.codProduto === os.codProduto) || {
-      descricao: os.produtoDescricao.split(" (")[0],
-      marca: os.produtoDescricao.includes("(") ? os.produtoDescricao.split("(")[1].replace(")", "") : "",
-      codProduto: os.codProduto,
-      codInterno: "---"
-    };
-    
     const dateFormatted = new Date(os.dataHora).toLocaleString("pt-BR");
+
+    // Resolve as linhas da tabela de produtos do termo
+    const itensToPrint = os.itens && os.itens.length > 0 
+      ? os.itens.map((it, idx) => {
+          // Busca dados complementares do produto
+          const dbProd = products.find(p => p.id === it.id || p.codProduto === it.codProduto) || {};
+          return {
+            index: idx + 1,
+            descricao: it.descricao,
+            marca: it.marca || dbProd.marca || "---",
+            codProduto: it.codProduto,
+            codInterno: it.codInterno || dbProd.codInterno || "---",
+            quantidade: it.quantidade
+          };
+        })
+      : [{
+          index: 1,
+          descricao: os.produtoDescricao.split(" (")[0],
+          marca: os.produtoDescricao.includes("(") ? os.produtoDescricao.split("(")[1].replace(")", "") : "---",
+          codProduto: os.codProduto,
+          codInterno: products.find(p => p.codProduto === os.codProduto)?.codInterno || "---",
+          quantidade: os.quantidade
+        }];
+
+    const itemRowsHtml = itensToPrint.map(item => `
+      <tr>
+        <td style="text-align: center; border: 1px solid #000000; padding: 8px;">${item.index}</td>
+        <td style="border: 1px solid #000000; padding: 8px;"><strong>${item.descricao}</strong></td>
+        <td style="border: 1px solid #000000; padding: 8px;">${item.marca}</td>
+        <td style="font-family: monospace; border: 1px solid #000000; padding: 8px;">${item.codProduto}</td>
+        <td style="font-family: monospace; border: 1px solid #000000; padding: 8px;">#${item.codInterno}</td>
+        <td style="text-align: center; font-weight: 900; font-size: 12px; border: 1px solid #000000; padding: 8px;">${item.quantidade}</td>
+      </tr>
+    `).join("");
 
     const htmlContent = `
       <html>
@@ -222,13 +250,12 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               font-weight: 700;
               text-transform: uppercase;
             }
-            /* Margem ampliada para criar um vão confortável para escrita manual */
             .cpf-field {
               font-weight: 400;
               font-size: 8.5px;
               color: #444444;
               display: block;
-              margin-top: 24px; /* Espaço amplo e nítido entre o rótulo e o campo */
+              margin-top: 24px;
               letter-spacing: 0.5px;
             }
           </style>
@@ -278,14 +305,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td style="text-align: center;">1</td>
-                <td><strong>${prod.descricao || os.produtoDescricao}</strong></td>
-                <td>${prod.marca || "---"}</td>
-                <td style="font-family: monospace;">${os.codProduto}</td>
-                <td style="font-family: monospace;">#${prod.codInterno}</td>
-                <td style="text-align: center; font-weight: 900; font-size: 12px;">${os.quantidade}</td>
-              </tr>
+              ${itemRowsHtml}
             </tbody>
           </table>
 
@@ -332,30 +352,98 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-  // --- SUBMETER CADASTRO DE NOVA ORDEM DE SERVIÇO ---
+
+  // --- ADICIONAR ITEM À FILA TEMPORÁRIA ---
+  const handleAddToFila = (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (!selectedProductId || !quantidade) {
+      setErrorMsg("Selecione um produto e defina a quantidade.");
+      return;
+    }
+
+    if (Number(quantidade) <= 0) {
+      setErrorMsg("A quantidade deve ser maior que zero.");
+      return;
+    }
+
+    if (!selectedProduct) {
+      setErrorMsg("Produto selecionado é inválido.");
+      return;
+    }
+
+    // Valida estoque considerando o que já está na fila
+    const existingItem = cartItems.find(item => item.id === selectedProduct.id);
+    const qtdExistente = existingItem ? existingItem.quantidade : 0;
+    const qtdTotalRequisitada = qtdExistente + Number(quantidade);
+
+    if (selectedProduct.quantidade < qtdTotalRequisitada) {
+      setErrorMsg(`Estoque insuficiente. Disponível em estoque: ${selectedProduct.quantidade} un. Já adicionado na fila: ${qtdExistente} un.`);
+      return;
+    }
+
+    if (existingItem) {
+      setCartItems(cartItems.map(item => 
+        item.id === selectedProduct.id
+          ? { ...item, quantidade: qtdTotalRequisitada }
+          : item
+      ));
+    } else {
+      setCartItems([
+        ...cartItems,
+        {
+          id: selectedProduct.id,
+          codInterno: selectedProduct.codInterno,
+          descricao: selectedProduct.descricao,
+          marca: selectedProduct.marca,
+          codProduto: selectedProduct.codProduto,
+          quantidade: Number(quantidade)
+        }
+      ]);
+    }
+
+    // Limpa apenas campos de produto e quantidade
+    setSelectedProductId("");
+    setProductSearch("");
+    setQuantidade(1);
+    setSuccessMsg("Item adicionado à Fila de Retirada!");
+    setTimeout(() => setSuccessMsg(""), 3000);
+  };
+
+  // --- REGISTRAR E EMITIR OS ---
   const handleSubmitOs = (e) => {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
 
-    if (!solicitante || !recebedor || !funcaoRecebedor || !problema || !selectedProductId || !aplicacao || !quantidade) {
-      setErrorMsg("Por favor, preencha todos os campos da Ordem de Serviço.");
+    if (!solicitante || !recebedor || !problema || !aplicacao) {
+      setErrorMsg("Por favor, preencha todos os campos do cabeçalho da Ordem de Serviço.");
       return;
     }
 
-    if (Number(quantidade) <= 0) {
-      setErrorMsg("A quantidade a ser retirada deve ser maior que zero.");
+    if (!funcaoRecebedor || !funcaoRecebedor.trim()) {
+      setErrorMsg("O campo Função ou Cargo precisa ser preenchido");
       return;
     }
 
-    if (!selectedProduct) {
-      setErrorMsg("Produto inválido selecionado.");
+    if (cartItems.length === 0) {
+      setErrorMsg("A Fila de Retirada está vazia. Adicione pelo menos 1 item.");
       return;
     }
 
-    if (selectedProduct.quantidade < Number(quantidade)) {
-      setErrorMsg(`Estoque insuficiente. Quantidade disponível: ${selectedProduct.quantidade} unidades.`);
-      return;
+    // Validação de segurança dupla de estoque
+    for (const item of cartItems) {
+      const dbProd = products.find(p => p.id === item.id);
+      if (!dbProd) {
+        setErrorMsg(`Produto "${item.descricao}" não foi encontrado no estoque.`);
+        return;
+      }
+      if (dbProd.quantidade < item.quantidade) {
+        setErrorMsg(`Estoque insuficiente para "${item.descricao}". Disponível: ${dbProd.quantidade} un.`);
+        return;
+      }
     }
 
     const proxNumero = osList.length + 1;
@@ -368,48 +456,55 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
       recebedor,
       funcaoRecebedor,
       problema,
-      codProduto: selectedProduct.codProduto,
-      produtoDescricao: `${selectedProduct.descricao} (${selectedProduct.marca})`,
       aplicacao,
-      quantidade: Number(quantidade),
       dataHora: dataHoraStr,
+      itens: cartItems,
+      // Fallbacks para compatibilidade retroativa:
+      quantidade: cartItems.reduce((sum, item) => sum + item.quantidade, 0),
+      produtoDescricao: cartItems.map(item => `${item.descricao} (${item.marca})`).join(", "),
+      codProduto: cartItems.map(item => item.codProduto).join(", ")
     };
 
+    // Decrementa o estoque real de cada um
     const updatedProducts = products.map(p => {
-      if (p.id === selectedProduct.id) {
-        return { ...p, quantidade: p.quantidade - Number(quantidade) };
+      const cartItem = cartItems.find(item => item.id === p.id);
+      if (cartItem) {
+        return { ...p, quantidade: p.quantidade - cartItem.quantidade };
       }
       return p;
     });
 
-    const newMove = {
-      id: "mov-" + Date.now() + Math.random(),
+    // Gerar logs de histórico individuais
+    const newMovements = cartItems.map((item, idx) => ({
+      id: `mov-${Date.now()}-${idx}-${Math.random()}`,
       tipo: "Saída OS",
-      descricao: `Retirada de ${quantidade} un para ${osId} (Destinatário: ${recebedor})`,
-      codProduto: selectedProduct.codProduto,
-      produtoDescricao: `${selectedProduct.descricao} (${selectedProduct.marca})`,
-      quantidade: Number(quantidade),
+      descricao: `Retirada de ${item.quantidade} un para ${osId} (Recebedor: ${recebedor} - ${funcaoRecebedor})`,
+      codProduto: item.codProduto,
+      produtoDescricao: `${item.descricao} (${item.marca})`,
+      quantidade: item.quantidade,
       usuario: solicitante,
       dataHora: dataHoraStr
-    };
+    }));
 
     setProducts(updatedProducts);
     setOsList([newOs, ...osList]);
-    setMovements([newMove, ...movements]);
+    setMovements([...newMovements, ...movements]);
 
     handlePrintOs(newOs);
 
+    // Reseta todo o formulário e a fila
     setSolicitante("");
     setRecebedor("");
     setFuncaoRecebedor("");
     setProblema("");
+    setAplicacao("");
     setSelectedProductId("");
     setProductSearch("");
-    setAplicacao("");
     setQuantidade(1);
+    setCartItems([]);
 
-    setSuccessMsg(`Ordem de Serviço ${osId} registrada com sucesso! Termo gerado.`);
-    alert(`Ordem de Serviço ${osId} salva com sucesso!\nO estoque do produto foi reduzido.`);
+    setSuccessMsg(`Ordem de Serviço ${osId} registrada com sucesso! Termo de Responsabilidade gerado.`);
+    alert(`Ordem de Serviço ${osId} salva com sucesso!\nO estoque dos itens retirados foi reduzido.`);
   };
 
   return (
@@ -419,8 +514,8 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
         <h2 className="text-2xl font-black text-gray-950 uppercase tracking-tight">
           Ordem de Serviço (Saída de Estoque)
         </h2>
-        <p className="text-sm text-gray-600">
-          Abra novas requisições de retirada de materiais, reduza saldos e emita Termos de Responsabilidade em tempo real.
+        <p className="text-sm text-gray-600 font-medium">
+          Abra novas requisições de retirada de múltiplos materiais, reduza saldos e emita Termos de Responsabilidade em tempo real.
         </p>
       </div>
 
@@ -431,36 +526,36 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
         <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <h3 className="font-extrabold text-gray-950 text-sm uppercase tracking-wider mb-5 pb-2 border-b border-gray-100 flex items-center space-x-2">
             <Wrench size={16} className="text-orange-500" />
-            <span>Formulário de Abertura de OS</span>
+            <span>Formulário de Abertura de OS (Lote)</span>
           </h3>
 
-          <form onSubmit={handleSubmitOs} className="space-y-4">
+          <form onSubmit={handleSubmitOs} className="space-y-5">
             {errorMsg && (
-              <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-xs flex items-center space-x-2">
+              <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-xs flex items-center space-x-2 animate-in fade-in duration-200">
                 <AlertCircle size={14} className="flex-shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
             
             {successMsg && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-lg text-xs flex items-center space-x-2">
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-lg text-xs flex items-center space-x-2 animate-in fade-in duration-200">
                 <FileCheck size={14} className="flex-shrink-0" />
                 <span className="font-bold">{successMsg}</span>
               </div>
             )}
 
+            {/* Cabeçalho do Termo */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase flex items-center space-x-1">
-                  <User size={12} className="text-gray-400" />
-                  <span>Retirado por (Solicitante)</span>
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Responsável pela Liberação
                 </label>
                 <input
                   type="text"
                   placeholder="Ex: Carlos Silva"
                   value={solicitante}
                   onChange={(e) => setSolicitante(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                   required
                 />
               </div>
@@ -475,7 +570,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   placeholder="Ex: Marcos Lima"
                   value={recebedor}
                   onChange={(e) => setRecebedor(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                   required
                 />
               </div>
@@ -490,93 +585,9 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   placeholder="Ex: Supervisor de Manutenção"
                   value={funcaoRecebedor}
                   onChange={(e) => setFuncaoRecebedor(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                   required
                 />
-              </div>
-
-              {/* Input de Busca de Itens */}
-              <div className="space-y-1 relative">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Produto para Retirada
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Busque por Nome, Marca ou Códigos..."
-                    value={productSearch}
-                    onChange={(e) => {
-                      setProductSearch(e.target.value);
-                      setIsOpen(true);
-                      if (!e.target.value) setSelectedProductId("");
-                    }}
-                    onFocus={() => setIsOpen(true)}
-                    onBlur={() => setTimeout(() => setIsOpen(false), 250)}
-                    className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
-                    required
-                  />
-                  {selectedProductId && (
-                    <button
-                      type="button"
-                      onClick={() => { setSelectedProductId(""); setProductSearch(""); setIsOpen(false); }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-
-                {isOpen && (
-                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto divide-y divide-gray-100">
-                    {filteredProductsForSelect.length === 0 ? (
-                      <div className="p-3 text-xs text-gray-500 text-center">Nenhum produto correspondente.</div>
-                    ) : (
-                      filteredProductsForSelect.map((p) => {
-                        const isDisabled = p.quantidade <= 0;
-                        const isExactMatch = searchTrimmed && (
-                          p.codProduto.toLowerCase() === searchTrimmed ||
-                          p.codInterno.toString().toLowerCase() === searchTrimmed
-                        );
-
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            disabled={isDisabled}
-                            onMouseDown={() => {
-                              setSelectedProductId(p.id);
-                              setProductSearch(`${p.descricao} (${p.marca})`);
-                              setIsOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex flex-col space-y-0.5 ${isDisabled ? "opacity-40 cursor-not-allowed bg-gray-50" : ""} ${isExactMatch ? "bg-orange-50/70 border-l-4 border-l-orange-500" : ""}`}
-                          >
-                            <div className="flex justify-between items-center w-full">
-                              <span className="font-bold text-xs text-gray-950">{p.descricao} ({p.marca})</span>
-                              {isExactMatch && <span className="bg-orange-500 text-black text-[8px] font-black uppercase px-1 rounded">Match</span>}
-                            </div>
-                            <div className="text-[10px] text-gray-500 font-medium">
-                              Ref: <span className="font-mono font-bold text-gray-700">{p.codProduto}</span> • Int: <span className="font-mono font-bold text-gray-700">#{p.codInterno}</span> • Saldo: <span className="font-bold text-gray-900">{p.quantidade} un</span>
-                            </div>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-1 md:col-span-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Descrição do Problema / Diagnóstico
-                </label>
-                <textarea
-                  rows="2"
-                  placeholder="Descreva brevemente a necessidade mecânica"
-                  value={problema}
-                  onChange={(e) => setProblema(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
-                  required
-                ></textarea>
               </div>
 
               <div className="space-y-1">
@@ -588,25 +599,172 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   placeholder="Ex: Substituição preventiva"
                   value={aplicacao}
                   onChange={(e) => setAplicacao(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                   required
                 />
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1 md:col-span-2">
                 <label className="text-xs font-bold text-gray-500 uppercase">
-                  Quantidade Retirada
+                  Descrição do Problema / Diagnóstico
                 </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={quantidade}
-                  onChange={(e) => setQuantidade(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
+                <textarea
+                  rows="2"
+                  placeholder="Descreva brevemente a necessidade mecânica..."
+                  value={problema}
+                  onChange={(e) => setProblema(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                   required
-                />
+                ></textarea>
               </div>
             </div>
+
+            {/* SEÇÃO DO CARRINHO / SELEÇÃO DE PRODUTOS */}
+            <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-200/80 space-y-4">
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block font-sans">Seleção de Itens (Adicionar ao Lote)</span>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                {/* Produto */}
+                <div className="space-y-1 relative md:col-span-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase">
+                    Produto para Retirada
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Busque por Nome, Marca ou Códigos..."
+                      value={productSearch}
+                      onChange={(e) => {
+                        setProductSearch(e.target.value);
+                        setIsOpen(true);
+                        if (!e.target.value) setSelectedProductId("");
+                      }}
+                      onFocus={() => setIsOpen(true)}
+                      onBlur={() => setTimeout(() => setIsOpen(false), 250)}
+                      className="w-full bg-white border border-gray-200 text-gray-950 px-3 py-2 pl-3 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
+                    />
+                    {selectedProductId && (
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedProductId(""); setProductSearch(""); setIsOpen(false); }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {isOpen && (
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto divide-y divide-gray-100">
+                      {filteredProductsForSelect.length === 0 ? (
+                        <div className="p-3 text-xs text-gray-500 text-center">Nenhum produto correspondente.</div>
+                      ) : (
+                        filteredProductsForSelect.map((p) => {
+                          const isDisabled = p.quantidade <= 0;
+                          const isExactMatch = searchTrimmed && (
+                            p.codProduto.toLowerCase() === searchTrimmed ||
+                            p.codInterno.toString().toLowerCase() === searchTrimmed
+                          );
+
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              disabled={isDisabled}
+                              onMouseDown={() => {
+                                setSelectedProductId(p.id);
+                                setProductSearch(`${p.descricao} (${p.marca})`);
+                                setIsOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex flex-col space-y-0.5 ${isDisabled ? "opacity-40 cursor-not-allowed bg-gray-50" : ""} ${isExactMatch ? "bg-orange-50/70 border-l-4 border-l-orange-500" : ""}`}
+                            >
+                              <div className="flex justify-between items-center w-full">
+                                <span className="font-bold text-xs text-gray-950">{p.descricao} ({p.marca})</span>
+                                {isExactMatch && <span className="bg-orange-500 text-black text-[8px] font-black uppercase px-1 rounded">Match</span>}
+                              </div>
+                              <div className="text-[10px] text-gray-500 font-medium">
+                                Ref: <span className="font-mono font-bold text-gray-700">{p.codProduto}</span> • Int: <span className="font-mono font-bold text-gray-700">#{p.codInterno}</span> • Saldo: <span className="font-bold text-gray-900">{p.quantidade} un</span>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Quantidade */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase">
+                    Quantidade Retirada
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={quantidade}
+                    onChange={(e) => setQuantidade(e.target.value)}
+                    className="w-full bg-white border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+              </div>
+
+              {/* Botão de Adicionar à Fila */}
+              <button
+                type="button"
+                onClick={handleAddToFila}
+                className="w-full bg-gray-950 hover:bg-orange-600 text-white font-bold uppercase text-xs py-2.5 rounded-lg transition-all shadow-sm cursor-pointer"
+              >
+                + Adicionar Item na OS
+              </button>
+            </div>
+
+            {/* TABELA TEMPORÁRIA DE CONFERÊNCIA */}
+            {cartItems.length > 0 && (
+              <div className="space-y-2 animate-in fade-in duration-300">
+                <label className="text-xs font-bold text-gray-500 uppercase flex items-center space-x-1.5">
+                  <span>Fila de Retirada ({cartItems.length} {cartItems.length === 1 ? "item" : "itens"})</span>
+                </label>
+                <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50 text-gray-500 font-bold uppercase">
+                        <th className="py-2.5 px-4">Descrição do Item</th>
+                        <th className="py-2.5 px-4">Marca</th>
+                        <th className="py-2.5 px-4 text-center">Ref. Fabricante</th>
+                        <th className="py-2.5 px-4 text-center">Qtd Retirada</th>
+                        <th className="py-2.5 px-4 text-center">Remover</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
+                      {cartItems.map((item, idx) => (
+                        <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="py-3 px-4 font-bold text-gray-950">{item.descricao}</td>
+                          <td className="py-3 px-4 text-gray-600">{item.marca}</td>
+                          <td className="py-3 px-4 text-center font-mono text-gray-500">{item.codProduto}</td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="font-extrabold bg-gray-50 border border-gray-200 px-3 py-1 rounded text-gray-950">
+                              {item.quantidade}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCartItems(cartItems.filter((_, i) => i !== idx));
+                              }}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
+                              title="Remover da fila"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             <div className="bg-gray-50 border border-gray-150 p-3 rounded-lg flex items-center justify-between text-xs text-gray-500">
               <span className="flex items-center space-x-1 font-medium">
@@ -616,9 +774,15 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               <span className="font-bold text-gray-700 font-mono">{new Date().toLocaleString()}</span>
             </div>
 
+            {/* Registrar OS */}
             <button
               type="submit"
-              className="w-full bg-orange-500 text-black font-black uppercase text-xs py-3.5 rounded-lg hover:bg-orange-600 transition-colors shadow-sm"
+              disabled={cartItems.length === 0}
+              className={`w-full text-black font-black uppercase text-xs py-3.5 rounded-lg transition-all shadow-sm ${
+                cartItems.length === 0
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300"
+                  : "bg-orange-500 hover:bg-orange-600 cursor-pointer"
+              }`}
             >
               REGISTRAR OS E EMITIR TERMO DE RESPONSABILIDADE
             </button>
@@ -753,15 +917,30 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                       <p className="text-[10px] text-gray-400 uppercase font-bold">{os.funcaoRecebedor}</p>
                     </td>
                     <td className="py-3 px-4">
-                      <p className="text-gray-950 font-bold"><span className="text-orange-600 font-black">{os.quantidade}x</span> {os.produtoDescricao}</p>
-                      <p className="text-[10px] text-gray-400 font-mono">Ref: {os.codProduto}</p>
+                      {os.itens && os.itens.length > 0 ? (
+                        <div className="space-y-2 py-1">
+                          {os.itens.map((it, idx) => (
+                            <div key={idx} className="border-b border-gray-50 last:border-none pb-1.5 last:pb-0">
+                              <p className="text-gray-950 font-bold">
+                                <span className="text-orange-600 font-black">{it.quantidade}x</span> {it.descricao}
+                              </p>
+                              <p className="text-[9px] text-gray-400 font-mono">Ref: {it.codProduto}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-gray-950 font-bold"><span className="text-orange-600 font-black">{os.quantidade}x</span> {os.produtoDescricao}</p>
+                          <p className="text-[10px] text-gray-400 font-mono">Ref: {os.codProduto}</p>
+                        </>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <button
                         type="button"
                         onClick={() => handlePrintOs(os)}
                         title="Baixar Segunda Via"
-                        className="p-2 bg-gray-950 text-white rounded-lg hover:bg-black hover:text-orange-500 transition-all shadow-sm flex items-center justify-center mx-auto"
+                        className="p-2 bg-gray-950 text-white rounded-lg hover:bg-black hover:text-orange-500 transition-all shadow-sm flex items-center justify-center mx-auto cursor-pointer"
                       >
                         <Printer size={13} />
                       </button>

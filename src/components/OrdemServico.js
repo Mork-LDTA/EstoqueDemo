@@ -94,6 +94,8 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     const htmlContent = `
       <html>
         <head>
+          <meta charset="UTF-8">
+          
           <title>Termo de Retirada - ${os.id}</title>
           <style>
             @page {

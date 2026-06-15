@@ -96,13 +96,17 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
         <head>
           <title>Termo de Retirada - ${os.id}</title>
           <style>
+            @page {
+            size: auto;
+            margin: 0mm; 
+            }
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
             body {
               font-family: 'Inter', sans-serif;
               color: #111827;
               background-color: #ffffff;
               margin: 0;
-              padding: 30px;
+              padding: 40px;
               font-size: 11px;
               line-height: 1.5;
             }

@@ -6,11 +6,14 @@ import {
   AlertCircle,
   FileCheck,
   Calendar,
-  Printer
+  Printer,
+  History,
+  SlidersHorizontal,
+  FileText
 } from "lucide-react";
 
 export default function OrdemServico({ products, setProducts, osList, setOsList, movements, setMovements }) {
-  // Estados do Formulário
+  // Estados do Formulário de Cadastro
   const [solicitante, setSolicitante] = useState("");
   const [recebedor, setRecebedor] = useState("");
   const [equipamento, setEquipamento] = useState("");
@@ -19,11 +22,21 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
   const [aplicacao, setAplicacao] = useState("");
   const [quantidade, setQuantidade] = useState(1);
 
-  // Estados de Busca e Visibilidade do Dropdown
+  // Estados de Busca e Visibilidade do Dropdown no Formulário
   const [productSearch, setProductSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
-  // Filtragem e ordenação inteligente dos produtos
+  // Estados dos Filtros do Histórico Inferior
+  const [filterId, setFilterId] = useState("");
+  const [filterData, setFilterData] = useState("");
+  const [filterRemetente, setFilterRemetente] = useState("");
+  const [filterDestinatario, setFilterDestinatario] = useState("");
+
+  // Mensagens de Erro e Sucesso do Formulário
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  // --- LOGICA DE BUSCA AVANÇADA DE PRODUTOS (FORMULÁRIO) ---
   const searchTrimmed = productSearch.trim().toLowerCase();
   const filteredProductsForSelect = products.filter(p => {
     if (!searchTrimmed) return true;
@@ -50,15 +63,25 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     });
   }
 
-  // Mensagens de Erro e Sucesso
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
-
-  // Obter o produto selecionado
+  // Obter o produto selecionado atualmente no formulário
   const selectedProduct = products.find(p => p.id === selectedProductId);
-// Função para Gerar e Baixar o Termo de Responsabilidade em formato HTML/PDF direto para Downloads
+
+  // --- LOGICA DE FILTRAGEM DO HISTÓRICO INFERIOR ---
+  const filteredOSHistory = osList.filter(os => {
+    const matchId = filterId.trim() ? os.id.toLowerCase().includes(filterId.trim().toLowerCase()) : true;
+    
+    // Filtro de data comparando apenas a parte YYYY-MM-DD
+    const osDataISO = os.dataHora.split("T")[0];
+    const matchData = filterData ? osDataISO === filterData : true;
+    
+    const matchRemetente = filterRemetente.trim() ? os.solicitante.toLowerCase().includes(filterRemetente.trim().toLowerCase()) : true;
+    const matchDestinatario = filterDestinatario.trim() ? os.recebedor.toLowerCase().includes(filterDestinatario.trim().toLowerCase()) : true;
+
+    return matchId && matchData && matchRemetente && matchDestinatario;
+  });
+
+  // --- FUNÇÃO PARA GERAR E BAIXAR O TERMO EXECUTÁVEL EM HTML ---
   const handlePrintOs = (os) => {
-    // Tenta encontrar o produto no estoque para obter marca e codInterno
     const prod = products.find(p => p.codProduto === os.codProduto) || {
       descricao: os.produtoDescricao.split(" (")[0],
       marca: os.produtoDescricao.includes("(") ? os.produtoDescricao.split("(")[1].replace(")", "") : "",
@@ -68,7 +91,6 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     
     const dateFormatted = new Date(os.dataHora).toLocaleString("pt-BR");
 
-    // Montagem do template estruturado do documento contratual profissional
     const htmlContent = `
       <html>
         <head>
@@ -88,7 +110,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 20px;
-              border: 1px solid #111827;
+              border: 2px solid #111827;
             }
             .header-table td {
               border: 1px solid #111827;
@@ -130,6 +152,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               width: 100%;
               border-collapse: collapse;
               border: 1px solid #111827;
+              margin-bottom: 15px;
             }
             .info-table td {
               border: 1px solid #111827;
@@ -148,6 +171,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               border-collapse: collapse;
               border: 1px solid #111827;
               margin-top: -1px;
+              margin-bottom: 15px;
             }
             .items-table th {
               border: 1px solid #111827;
@@ -168,24 +192,25 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               padding: 12px;
               font-size: 10px;
               text-align: justify;
-              margin-top: 15px;
+              margin-top: -1px;
               line-height: 1.4;
+              margin-bottom: 40px;
             }
-            .signatures-container {
-              margin-top: 50px;
-              display: table;
+            .signatures-table {
               width: 100%;
+              border-collapse: collapse;
+              margin-top: 40px;
             }
-            .signature-col {
-              display: table-cell;
+            .signatures-table td {
               width: 50%;
               text-align: center;
               vertical-align: bottom;
               padding: 0 20px;
+              border: none;
             }
             .line-draw {
               border-top: 1px solid #000;
-              width: 80%;
+              width: 85%;
               margin: 0 auto 5px auto;
             }
             .signature-label {
@@ -193,6 +218,11 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               font-weight: 700;
               text-transform: uppercase;
               white-space: pre-line;
+            }
+            @media print {
+              body {
+                padding: 10px;
+              }
             }
           </style>
         </head>
@@ -257,48 +287,40 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
             Declaro para os devidos fins que recebi em perfeito estado os materiais acima listados, assumindo total responsabilidade pelo uso adequado, aplicação na respectiva ordem de serviço e guarda dos mesmos.
           </div>
 
-          <div class="signatures-container">
-            <div class="signature-col">
-              <div class="line-draw"></div>
-              <div class="signature-label">SOLICITANTE / RECEBEDOR<br>CPF/RE: ______________________________</div>
-            </div>
-            <div class="signature-col">
-              <div class="line-draw"></div>
-              <div class="signature-label">RESPONSÁVEL PELA LIBERAÇÃO<br>ALMOXARIFADO</div>
-            </div>
-          </div>
-          
+          <table class="signatures-table">
+            <tr>
+              <td>
+                <div class="line-draw"></div>
+                <div class="signature-label">SOLICITANTE / RECEBEDOR<br><span style="font-weight: 400; font-size: 8px; color: #4b5563;">CPF/RE: ______________________________</span></div>
+              </td>
+              <td>
+                <div class="line-draw"></div>
+                <div class="signature-label">RESPONSÁVEL PELA LIBERAÇÃO<br><span style="font-weight: 400; font-size: 8px; color: #4b5563;">ALMOXARIFADO CENTRAL</span></div>
+              </td>
+            </tr>
+          </table>
+
           <script>
-            // Força a execução automática da impressão ao converter ou abrir o arquivo
-            window.onload = function() { window.print(); }
+            window.onload = function() {
+              window.print();
+            }
           </script>
         </body>
       </html>
     `;
 
-    // Converte a string HTML em um objeto Blob seguro
     const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-    
-    // Instancia uma URL temporária na memória do navegador
     const url = URL.createObjectURL(blob);
-    
-    // Constrói um elemento âncora oculto para injetar o evento de download
     const link = document.createElement("a");
     link.href = url;
-    
-    // Define a saída com a nomenclatura estruturada da OS correspondente
     link.download = `Termo_Responsabilidade_${os.id}.html`;
-    
-    // Insere o elemento, executa o clique virtual e o remove da estrutura do DOM
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
-    // Libera a memória alocada para a URL temporária
     URL.revokeObjectURL(url);
   };
 
-  // Submeter Ordem de Serviço (Saída de Estoque)
+  // --- SUBMETER CADASTRO DE NOVA ORDEM DE SERVIÇO ---
   const handleSubmitOs = (e) => {
     e.preventDefault();
     setErrorMsg("");
@@ -309,7 +331,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
       return;
     }
 
-    if (quantidade <= 0) {
+    if (Number(quantidade) <= 0) {
       setErrorMsg("A quantidade a ser retirada deve ser maior que zero.");
       return;
     }
@@ -319,14 +341,13 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
       return;
     }
 
-    // Validar se há estoque disponível
-    if (selectedProduct.quantidade < quantidade) {
+    if (selectedProduct.quantidade < Number(quantidade)) {
       setErrorMsg(`Estoque insuficiente. Quantidade disponível: ${selectedProduct.quantidade} unidades.`);
       return;
     }
 
-    // Criar Nova OS
-    const osId = "OS-" + (1000 + osList.length + 1);
+    const proxNumero = osList.length + 1;
+    const osId = "OS-" + String(proxNumero).padStart(4, "0");
     const dataHoraStr = new Date().toISOString();
 
     const newOs = {
@@ -342,22 +363,17 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
       dataHora: dataHoraStr,
     };
 
-    // Subtrair quantidade do produto
     const updatedProducts = products.map(p => {
       if (p.id === selectedProduct.id) {
-        return {
-          ...p,
-          quantidade: p.quantidade - Number(quantidade)
-        };
+        return { ...p, quantidade: p.quantidade - Number(quantidade) };
       }
       return p;
     });
 
-    // Criar Log de Movimentação (Saída)
-    const newMov = {
-      id: "mov-" + Date.now(),
+    const newMove = {
+      id: "mov-" + Date.now() + Math.random(),
       tipo: "Saída OS",
-      descricao: `Retirada de ${quantidade} unidades para ${osId} (Equipamento: ${equipamento})`,
+      descricao: `Retirada de ${quantidade} un para ${osId} (Destinatário: ${recebedor})`,
       codProduto: selectedProduct.codProduto,
       produtoDescricao: `${selectedProduct.descricao} (${selectedProduct.marca})`,
       quantidade: Number(quantidade),
@@ -365,15 +381,12 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
       dataHora: dataHoraStr
     };
 
-    // Atualizar Estados Globais
     setProducts(updatedProducts);
     setOsList([newOs, ...osList]);
-    setMovements([newMov, ...movements]);
+    setMovements([newMove, ...movements]);
 
-    // Gerar e imprimir o Termo de Responsabilidade em PDF
     handlePrintOs(newOs);
 
-    // Limpar Formulário e dar Feedback
     setSolicitante("");
     setRecebedor("");
     setEquipamento("");
@@ -383,25 +396,26 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
     setAplicacao("");
     setQuantidade(1);
 
-    setSuccessMsg(`Ordem de Serviço ${osId} registrada com sucesso! Estoque atualizado.`);
-    alert(`Ordem de Serviço ${osId} salva com sucesso!\nO estoque do produto foi decrementado em ${quantidade} unidade(s).`);
+    setSuccessMsg(`Ordem de Serviço ${osId} registrada com sucesso! Termo gerado.`);
+    alert(`Ordem de Serviço ${osId} salva com sucesso!\nO estoque do produto foi reduzido.`);
   };
 
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Header */}
+      {/* Cabeçalho de Aba */}
       <div className="border-b border-gray-200 pb-4">
         <h2 className="text-2xl font-black text-gray-950 uppercase tracking-tight">
           Ordem de Serviço (Saída de Estoque)
         </h2>
         <p className="text-sm text-gray-600">
-          Abra uma nova requisição de retirada de materiais para manutenção ou aplicação em equipamentos, reduzindo o saldo em estoque em tempo real.
+          Abra novas requisições de retirada de materiais, reduza saldos e emita Termos de Responsabilidade em tempo real.
         </p>
       </div>
 
+      {/* Grid Principal Superior */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Painel do Formulário */}
+        {/* Bloco do Formulário */}
         <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <h3 className="font-extrabold text-gray-950 text-sm uppercase tracking-wider mb-5 pb-2 border-b border-gray-100 flex items-center space-x-2">
             <Wrench size={16} className="text-orange-500" />
@@ -409,8 +423,6 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
           </h3>
 
           <form onSubmit={handleSubmitOs} className="space-y-4">
-            
-            {/* Mensagens de feedback */}
             {errorMsg && (
               <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-xs flex items-center space-x-2">
                 <AlertCircle size={14} className="flex-shrink-0" />
@@ -426,8 +438,6 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
-              {/* Solicitante */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase flex items-center space-x-1">
                   <User size={12} className="text-gray-400" />
@@ -438,12 +448,11 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   placeholder="Ex: Carlos Silva"
                   value={solicitante}
                   onChange={(e) => setSolicitante(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
                   required
                 />
               </div>
 
-              {/* Recebedor */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase flex items-center space-x-1">
                   <User size={12} className="text-gray-400" />
@@ -454,12 +463,11 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   placeholder="Ex: Marcos Lima"
                   value={recebedor}
                   onChange={(e) => setRecebedor(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
                   required
                 />
               </div>
 
-              {/* Equipamento */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase flex items-center space-x-1">
                   <Cpu size={12} className="text-gray-400" />
@@ -470,12 +478,12 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   placeholder="Ex: Supervisor de Manutenção"
                   value={equipamento}
                   onChange={(e) => setEquipamento(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
                   required
                 />
               </div>
 
-              {/* Seleção do Produto com Busca Avançada */}
+              {/* Input de Busca de Itens */}
               <div className="space-y-1 relative">
                 <label className="text-xs font-bold text-gray-500 uppercase">
                   Produto para Retirada
@@ -483,32 +491,23 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Pesquise por Nome, Fabricante ou Código Interno..."
+                    placeholder="Busque por Nome, Marca ou Códigos..."
                     value={productSearch}
                     onChange={(e) => {
                       setProductSearch(e.target.value);
                       setIsOpen(true);
-                      if (!e.target.value) {
-                        setSelectedProductId("");
-                      }
+                      if (!e.target.value) setSelectedProductId("");
                     }}
                     onFocus={() => setIsOpen(true)}
-                    onBlur={() => {
-                      // Pequeno delay para permitir clique nas opções do dropdown
-                      setTimeout(() => setIsOpen(false), 200);
-                    }}
-                    className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white transition-colors"
+                    onBlur={() => setTimeout(() => setIsOpen(false), 250)}
+                    className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
                     required
                   />
                   {selectedProductId && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedProductId("");
-                        setProductSearch("");
-                        setIsOpen(false);
-                      }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 font-black text-xs"
+                      onClick={() => { setSelectedProductId(""); setProductSearch(""); setIsOpen(false); }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
                     >
                       ✕
                     </button>
@@ -516,11 +515,9 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                 </div>
 
                 {isOpen && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto divide-y divide-gray-100">
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto divide-y divide-gray-100">
                     {filteredProductsForSelect.length === 0 ? (
-                      <div className="p-3 text-xs text-gray-500 text-center">
-                        Nenhum produto correspondente.
-                      </div>
+                      <div className="p-3 text-xs text-gray-500 text-center">Nenhum produto correspondente.</div>
                     ) : (
                       filteredProductsForSelect.map((p) => {
                         const isDisabled = p.quantidade <= 0;
@@ -539,22 +536,14 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                               setProductSearch(`${p.descricao} (${p.marca})`);
                               setIsOpen(false);
                             }}
-                            className={`w-full text-left px-4 py-2.5 hover:bg-orange-50/50 flex flex-col space-y-1 transition-colors ${
-                              isDisabled ? "opacity-50 cursor-not-allowed bg-gray-50" : ""
-                            } ${isExactMatch ? "bg-orange-50/80 border-l-4 border-l-orange-500" : ""}`}
+                            className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex flex-col space-y-0.5 ${isDisabled ? "opacity-40 cursor-not-allowed bg-gray-50" : ""} ${isExactMatch ? "bg-orange-50/70 border-l-4 border-l-orange-500" : ""}`}
                           >
                             <div className="flex justify-between items-center w-full">
-                              <span className="font-bold text-xs text-gray-950">
-                                {p.descricao} ({p.marca})
-                              </span>
-                              {isExactMatch && (
-                                <span className="bg-orange-500 text-black text-[9px] font-black uppercase px-1.5 py-0.5 rounded leading-none">
-                                  Match Exato
-                                </span>
-                              )}
+                              <span className="font-bold text-xs text-gray-950">{p.descricao} ({p.marca})</span>
+                              {isExactMatch && <span className="bg-orange-500 text-black text-[8px] font-black uppercase px-1 rounded">Match</span>}
                             </div>
                             <div className="text-[10px] text-gray-500 font-medium">
-                              Fab: <span className="font-mono text-gray-700 font-bold">{p.codProduto}</span> • Int: <span className="font-mono text-gray-700 font-bold">#{p.codInterno}</span> • Estoque: <span className={`font-black ${p.quantidade < 3 ? "text-red-600" : "text-gray-900"}`}>{p.quantidade}</span> un
+                              Ref: <span className="font-mono font-bold text-gray-700">{p.codProduto}</span> • Int: <span className="font-mono font-bold text-gray-700">#{p.codInterno}</span> • Saldo: <span className="font-bold text-gray-900">{p.quantidade} un</span>
                             </div>
                           </button>
                         );
@@ -564,37 +553,34 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                 )}
               </div>
 
-              {/* Descrição do Problema */}
               <div className="space-y-1 md:col-span-2">
                 <label className="text-xs font-bold text-gray-500 uppercase">
                   Descrição do Problema / Diagnóstico
                 </label>
                 <textarea
                   rows="2"
-                  placeholder="Descreva brevemente o problema mecânico ou necessidade"
+                  placeholder="Descreva brevemente a necessidade mecânica"
                   value={problema}
                   onChange={(e) => setProblema(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
                   required
                 ></textarea>
               </div>
 
-              {/* Aplicação */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase">
                   Aplicação / Finalidade
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Substituição de item desgastado"
+                  placeholder="Ex: Substituição preventiva"
                   value={aplicacao}
                   onChange={(e) => setAplicacao(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
                   required
                 />
               </div>
 
-              {/* Quantidade a Retirar */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase">
                   Quantidade Retirada
@@ -604,125 +590,177 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   min="1"
                   value={quantidade}
                   onChange={(e) => setQuantidade(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:bg-white"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
                   required
                 />
               </div>
-
             </div>
 
-            {/* Preenchimento Automático de Data e Hora */}
             <div className="bg-gray-50 border border-gray-150 p-3 rounded-lg flex items-center justify-between text-xs text-gray-500">
               <span className="flex items-center space-x-1 font-medium">
                 <Calendar size={13} className="text-gray-400" />
-                <span>Data/Hora da OS(Automática):</span>
+                <span>Data/Hora de Emissão (Automática):</span>
               </span>
-              <span className="font-bold text-gray-700 font-mono">
-                {new Date().toLocaleString()}
-              </span>
+              <span className="font-bold text-gray-700 font-mono">{new Date().toLocaleString()}</span>
             </div>
 
-            <div className="pt-2">
-              <button
-                type="submit"
-                className="w-full bg-orange-500 text-black font-black uppercase text-xs py-3.5 rounded-lg hover:bg-orange-600 transition-colors shadow-sm"
-              >
-                Registrar OS e Decrementar Estoque
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="w-full bg-orange-500 text-black font-black uppercase text-xs py-3.5 rounded-lg hover:bg-orange-600 transition-colors shadow-sm"
+            >
+              REGISTRAR OS E EMITIR TERMO DE RESPONSABILIDADE
+            </button>
           </form>
         </div>
 
-        {/* Painel Informativo Lateral */}
-        <div className="space-y-6">
-          
-          {/* Card do Produto Selecionado */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
-            <h3 className="font-extrabold text-gray-950 text-xs uppercase tracking-wider border-b border-gray-100 pb-2">
-              Status do Item Selecionado
-            </h3>
+        {/* Painel Lateral Informativo */}
+        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4 h-fit">
+          <h3 className="font-extrabold text-gray-950 text-xs uppercase tracking-wider border-b border-gray-100 pb-2 flex items-center space-x-1.5">
+            <FileText size={14} className="text-orange-500" />
+            <span>Status do Item Selecionado</span>
+          </h3>
 
-            {!selectedProduct ? (
-              <div className="text-center py-6 text-xs text-gray-400">
-                Selecione um produto no formulário para visualizar os detalhes de inventário aqui.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400 font-bold">CÓD. INTERNO</span>
-                  <span className="font-mono font-bold text-orange-600">#{selectedProduct.codInterno}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400 font-bold">MARCA</span>
-                  <span className="font-bold text-gray-800">{selectedProduct.marca}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400 font-bold">REFERÊNCIA</span>
-                  <span className="font-mono text-gray-700">{selectedProduct.codProduto}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-400 font-bold">LOCALIZAÇÃO</span>
-                  <span className="font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded text-[10px]">{selectedProduct.localizacao || "N/A"}</span>
-                </div>
-                
-                <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
-                  <span className="text-xs text-gray-500 font-bold">ESTOQUE ATUAL</span>
-                  <span className={`text-lg font-black ${selectedProduct.quantidade < 3 ? "text-red-600" : "text-gray-950"}`}>
-                    {selectedProduct.quantidade} pçs
-                  </span>
-                </div>
-
-                {selectedProduct.quantidade < 3 && (
-                  <div className="bg-red-50 text-red-800 p-2.5 rounded border border-red-150 text-[10px] flex items-start space-x-1 leading-normal">
-                    <span>⚠️</span>
-                    <span>Atenção: A quantidade deste item está criticamente baixa. Recomenda-se abrir requisição de compras antes de retirar.</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Últimos registros de OS */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
-            <h3 className="font-extrabold text-gray-950 text-xs uppercase tracking-wider border-b border-gray-100 pb-2">
-              Ordens de Serviço Abertas ({osList.length})
-            </h3>
-            
-            <div className="space-y-3 max-h-56 overflow-y-auto divide-y divide-gray-100">
-              {osList.length === 0 ? (
-                <div className="text-center py-4 text-xs text-gray-400">
-                  Nenhuma ordem de serviço registrada.
-                </div>
-              ) : (
-                osList.map((os, idx) => (
-                  <div key={os.id || idx} className="pt-3 first:pt-0 text-xs space-y-1">
-                    <div className="flex justify-between items-center font-bold">
-                      <div className="flex items-center space-x-1.5">
-                        <span className="text-orange-600 font-mono">{os.id}</span>
-                        <button
-                          type="button"
-                          onClick={() => handlePrintOs(os)}
-                          title="Reimprimir Termo"
-                          className="text-gray-400 hover:text-orange-500 p-0.5 rounded transition-colors"
-                        >
-                          <Printer size={12} />
-                        </button>
-                      </div>
-                      <span className="text-[10px] text-gray-400 font-normal">{new Date(os.dataHora).toLocaleDateString()}</span>
-                    </div>
-                    <p className="font-bold text-gray-800 leading-tight">{os.produtoDescricao}</p>
-                    <p className="text-[10px] text-gray-500">Equipamento: {os.equipamento}</p>
-                    <p className="text-[10px] text-gray-500">Retirante: {os.solicitante}</p>
-                  </div>
-                ))
-              )}
+          {!selectedProduct ? (
+            <div className="text-center py-8 text-xs text-gray-400 italic">
+              Nenhum produto em triagem de OS no momento.
             </div>
-          </div>
-
+          ) : (
+            <div className="space-y-3 text-xs">
+              <div className="flex justify-between border-b border-gray-50 pb-1.5">
+                <span className="text-gray-400 font-bold">CÓD. INTERNO</span>
+                <span className="font-mono font-bold text-orange-600">#{selectedProduct.codInterno}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-50 pb-1.5">
+                <span className="text-gray-400 font-bold">MARCA</span>
+                <span className="font-bold text-gray-800">{selectedProduct.marca}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-50 pb-1.5">
+                <span className="text-gray-400 font-bold">POSIÇÃO FÍSICA</span>
+                <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-[10px] text-gray-900 font-bold">{selectedProduct.localizacao || "PENDENTE"}</span>
+              </div>
+              <div className="flex justify-between items-center pt-1">
+                <span className="text-gray-500 font-bold">ESTOQUE FÍSICO</span>
+                <span className={`text-lg font-black ${selectedProduct.quantidade < 3 ? "text-red-600" : "text-gray-950"}`}>{selectedProduct.quantidade} pçs</span>
+              </div>
+            </div>
+          )}
         </div>
-
       </div>
 
+      {/* --- HISTÓRICO INTEGRADO COM FILTROS AVANÇADOS --- */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-5">
+        <div className="border-b border-gray-100 pb-3 flex items-center space-x-2">
+          <History size={18} className="text-orange-500" />
+          <h3 className="font-black text-gray-950 text-sm uppercase tracking-wider">
+            Histórico Consolidado de Ordens de Serviço
+          </h3>
+        </div>
+
+        {/* Painel de Filtros */}
+        <div className="bg-gray-50 border border-gray-150 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="space-y-1">
+            <span className="text-[10px] font-black text-gray-500 uppercase flex items-center space-x-1">
+              <SlidersHorizontal size={10} /> <span>Nº Controle OS</span>
+            </span>
+            <input 
+              type="text" 
+              placeholder="Ex: 0001"
+              value={filterId}
+              onChange={(e) => setFilterId(e.target.value)}
+              className="w-full bg-white border border-gray-200 text-gray-950 px-2.5 py-1.5 rounded-lg text-xs font-semibold focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-black text-gray-500 uppercase flex items-center space-x-1">
+              <Calendar size={10} /> <span>Data de Registro</span>
+            </span>
+            <input 
+              type="date" 
+              value={filterData}
+              onChange={(e) => setFilterData(e.target.value)}
+              className="w-full bg-white border border-gray-200 text-gray-950 px-2.5 py-1.5 rounded-lg text-xs font-semibold focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-black text-gray-500 uppercase flex items-center space-x-1">
+              <User size={10} /> <span>Remetente (Solicitante)</span>
+            </span>
+            <input 
+              type="text" 
+              placeholder="Filtrar operador..."
+              value={filterRemetente}
+              onChange={(e) => setFilterRemetente(e.target.value)}
+              className="w-full bg-white border border-gray-200 text-gray-950 px-2.5 py-1.5 rounded-lg text-xs font-semibold focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-black text-gray-500 uppercase flex items-center space-x-1">
+              <User size={10} /> <span>Destinatário (Recebedor)</span>
+            </span>
+            <input 
+              type="text" 
+              placeholder="Filtrar recebedor..."
+              value={filterDestinatario}
+              onChange={(e) => setFilterDestinatario(e.target.value)}
+              className="w-full bg-white border border-gray-200 text-gray-950 px-2.5 py-1.5 rounded-lg text-xs font-semibold focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Tabela do Histórico */}
+        <div className="overflow-x-auto border border-gray-150 rounded-xl">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-gray-200 text-gray-500 font-bold uppercase bg-gray-50">
+                <th className="py-3 px-4">Nº OS</th>
+                <th className="py-3 px-4">Data / Horário</th>
+                <th className="py-3 px-4">Remetente (Emissor)</th>
+                <th className="py-3 px-4">Destinatário (Aplicação)</th>
+                <th className="py-3 px-4">Item Retirado</th>
+                <th className="py-3 px-4 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
+              {filteredOSHistory.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="py-10 text-center text-gray-400 italic">
+                    Nenhum registro de Ordem de Serviço encontrado.
+                  </td>
+                </tr>
+              ) : (
+                filteredOSHistory.map((os) => (
+                  <tr key={os.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3 px-4 text-gray-950 font-bold font-mono tracking-wide">{os.id}</td>
+                    <td className="py-3 px-4 text-gray-500">{new Date(os.dataHora).toLocaleString("pt-BR")}</td>
+                    <td className="py-3 px-4 text-gray-950 font-semibold">{os.solicitante}</td>
+                    <td className="py-3 px-4">
+                      <p className="text-gray-950 font-semibold">{os.recebedor}</p>
+                      <p className="text-[10px] text-gray-400 uppercase font-bold">{os.equipamento}</p>
+                    </td>
+                    <td className="py-3 px-4">
+                      <p className="text-gray-950 font-bold"><span className="text-orange-600 font-black">{os.quantidade}x</span> {os.produtoDescricao}</p>
+                      <p className="text-[10px] text-gray-400 font-mono">Ref: {os.codProduto}</p>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handlePrintOs(os)}
+                        title="Baixar Segunda Via"
+                        className="p-2 bg-gray-950 text-white rounded-lg hover:bg-black hover:text-orange-500 transition-all shadow-sm flex items-center justify-center mx-auto"
+                      >
+                        <Printer size={13} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

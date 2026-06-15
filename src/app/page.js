@@ -8,6 +8,7 @@ import EstoquePrateleira from "@/components/EstoquePrateleira";
 import OrdemServico from "@/components/OrdemServico";
 import Relatorios from "@/components/Relatorios";
 import CadastroManual from "@/components/CadastroManual";
+import RastrearNF from "@/components/RastrearNF";
 import { getStorageData, saveStorageData } from "@/utils/storage";
 
 export default function Home() {
@@ -124,6 +125,8 @@ export default function Home() {
         );
       case "relatorios":
         return <Relatorios movements={movements} products={products} />;
+      case "rastrear-nf":
+        return <RastrearNF movements={movements} products={products} />;
       default:
         return (
           <div className="bg-white border border-gray-200 p-8 rounded-xl text-center text-gray-500">

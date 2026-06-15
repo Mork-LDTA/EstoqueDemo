@@ -4,6 +4,7 @@ import {
   FileInput,
   PlusCircle,
   Package,
+  SearchCode,
   Wrench,
   BarChart3,
   Factory,
@@ -17,6 +18,7 @@ export default function Sidebar({ activeTab, setActiveTab, theme, toggleTheme })
     { id: "nf-entrada", label: "Entrada de Nota Fiscal", icon: FileInput },
     { id: "cadastro-manual", label: "Cadastro Manual", icon: PlusCircle },
     { id: "estoque", label: "Estoque e Prateleira", icon: Package },
+    { id: "rastrear-nf", label: "Rastrear NF", icon: SearchCode },
     { id: "ordem-servico", label: "Ordem de Serviço", icon: Wrench },
     { id: "relatorios", label: "Histórico e Relatórios", icon: BarChart3 },
   ];

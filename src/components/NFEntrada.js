@@ -336,7 +336,8 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
         produtoDescricao: `${item.descricao} (${item.marca})`,
         quantidade: item.quantidade,
         usuario: "Operador Almoxarifado",
-        dataHora: new Date().toISOString()
+        dataHora: new Date().toISOString(),
+        chaveNf: chaveNf
       });
     });
 

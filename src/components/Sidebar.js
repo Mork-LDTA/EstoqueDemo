@@ -6,10 +6,12 @@ import {
   Package,
   Wrench,
   BarChart3,
-  Factory
+  Factory,
+  Sun,
+  Moon
 } from "lucide-react";
 
-export default function Sidebar({ activeTab, setActiveTab }) {
+export default function Sidebar({ activeTab, setActiveTab, theme, toggleTheme }) {
   const menuItems = [
     { id: "dashboard", label: "Painel de Controle", icon: LayoutDashboard },
     { id: "nf-entrada", label: "Entrada de Nota Fiscal", icon: FileInput },
@@ -22,18 +24,32 @@ export default function Sidebar({ activeTab, setActiveTab }) {
   return (
     <aside className="w-64 bg-gray-950 text-white flex flex-col border-r border-gray-800 h-screen sticky top-0">
       {/* Brand/Logo */}
-      <div className="p-6 border-b border-gray-800 flex items-center space-x-3">
-        <div className="bg-orange-500 p-2 rounded-lg text-black">
-          <Factory size={24} className="stroke-[2.5]" />
+      <div className="p-6 border-b border-gray-800 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="bg-orange-500 p-2 rounded-lg text-black">
+            <Factory size={24} className="stroke-[2.5]" />
+          </div>
+          <div>
+            <h1 className="font-extrabold text-lg tracking-wider text-white">
+              FX<span className="text-orange-500">Minas</span>
+            </h1>
+            <p className="text-xs text-gray-500 uppercase tracking-widest font-semibold">
+              Painel de Controle
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-extrabold text-lg tracking-wider text-white">
-            FX<span className="text-orange-500">Minas</span>
-          </h1>
-          <p className="text-xs text-gray-500 uppercase tracking-widest font-semibold">
-            Painel de Controle
-          </p>
-        </div>
+
+        {/* Toggle Button */}
+        {toggleTheme && (
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-1.5 rounded-lg bg-gray-900 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700 transition-all cursor-pointer flex items-center justify-center animate-in fade-in"
+            title={theme === "dark" ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
+          >
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+        )}
       </div>
 
       {/* Navigation */}

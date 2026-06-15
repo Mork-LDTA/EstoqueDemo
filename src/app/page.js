@@ -16,15 +16,41 @@ export default function Home() {
   const [osList, setOsList] = useState([]);
   const [movements, setMovements] = useState([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [theme, setTheme] = useState("light");
 
-  // Carregar dados do localStorage ao montar o componente
+  // Carregar dados e preferência de tema ao montar
   useEffect(() => {
     const data = getStorageData();
     setProducts(data.products);
     setOsList(data.osList);
     setMovements(data.movements);
     setIsMounted(true);
+
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(prefersDark ? "dark" : "light");
+    }
   }, []);
+
+  // Monitorar alterações no tema e persistir/aplicar classe dark
+  useEffect(() => {
+    if (isMounted) {
+      const root = window.document.documentElement;
+      if (theme === "dark") {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
+      localStorage.setItem("theme", theme);
+    }
+  }, [theme, isMounted]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === "dark" ? "light" : "dark"));
+  };
 
   // Salvar no localStorage sempre que houver alteração nos estados
   useEffect(() => {
@@ -108,12 +134,17 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-950 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 text-gray-950 dark:bg-gray-950 dark:text-gray-50 transition-colors duration-200 overflow-hidden">
       {/* Barra de Navegação Lateral */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        theme={theme} 
+        toggleTheme={toggleTheme} 
+      />
 
       {/* Conteúdo Principal da SPA */}
-      <main className="flex-1 overflow-y-auto bg-gray-50 p-6 md:p-8">
+      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 p-6 md:p-8 transition-colors duration-200">
         <div className="max-w-7xl mx-auto">
           {renderTabContent()}
         </div>

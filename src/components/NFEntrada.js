@@ -44,7 +44,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
     // Dicionário de Mocks simulando lotes reais de entrega com mais de 1 item por NF
     const bancoNotasFiscais = {
       // LOTEPADRÃO: Simulação completa contendo 3 itens distintos para a manutenção
-       "3526061234567800019955001000004444123456794": [{ // Atalho rápido para digitação no Pitch
+       "3526061234567800019955001000004444123456114": [{ // Atalho rápido para digitação no Pitch
         descricao: "Filtro Separador de Combustível (Racor)",
         marca: "PARKER",
         codProduto: "R90-P",
@@ -53,8 +53,68 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
         localizacao: "",
         alocado: false
       }],
+      "35260600012345678901234567890123456789012433": [
+        {
+          descricao: "Filtro Separador de Água Racor Combustível",
+          marca: "DONALDSON",
+          codProduto: "P550388",
+          familia: "Filtros",
+          quantidade: 5,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Tambor de Freio Traseiro Caminhão Traçado",
+          marca: "FRAS-LE",
+          codProduto: "T-284",
+          familia: "Freios",
+          quantidade: 4,
+          localizacao: "",
+          alocado: false
+        }
+      ],
+      "35260600012345678901234567890123456789012444": [
+        {
+          descricao: "Válvula Moduladora do Sistema ABS / EBS",
+          marca: "WABCO",
+          codProduto: "4801020300",
+          familia: "Freios",
+          quantidade: 1,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Bolsa da Suspensão Pneumática do Eixo Traseiro",
+          marca: "SUSPENSYS",
+          codProduto: "BL-0042",
+          familia: "Suspensão",
+          quantidade: 2,
+          localizacao: "",
+          alocado: false
+        }
+      ],
+      "35260600012345678901234567890123456789012455": [
+        {
+          descricao: "Kits de Filtro de Óleo Lubrificante Motor",
+          marca: "MANN FILTER",
+          codProduto: "HU12140X",
+          familia: "Filtros",
+          quantidade: 8,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Rolamento do Cubo de Roda Dianteira",
+          marca: "SKF",
+          codProduto: "VKBA5412",
+          familia: "Suspensão",
+          quantidade: 3,
+          localizacao: "",
+          alocado: false
+        }
+      ],
 
-      "35260600012345678901234567890123456789012345": [
+      "35260600012345678901234567890123456789012300": [
         {
           descricao: "Rolamento de Roda Traseira",
           marca: "TIMKEN",
@@ -84,7 +144,7 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
         }
       ],
       // ATALHO 5555: Kit de Reparo Rápido de Injeção e Suspensão
-      "35260600012345678901234567890123456789012421": [
+      "35260600012345678901234567890123456789012422": [
         {
           descricao: "Bico Injetor Common Rail Sistema CRDI",
           marca: "BOSCH",
@@ -100,6 +160,53 @@ export default function NFEntrada({ products, setProducts, movements, setMovemen
           codProduto: "1T15R-6",
           familia: "Suspensão",
           quantidade: 3,
+          localizacao: "",
+          alocado: false
+        }
+      ],
+      "35260600012345678901234567890123456789010022": [
+        {
+          descricao: "Bico Injetor Common Rail Sistema CRDI",
+          marca: "BOSCH",
+          codProduto: "0445120007",
+          familia: "Motor",
+          quantidade: 2,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Mola Pneumática da Cabine (Bolsão)",
+          marca: "GOODYEAR",
+          codProduto: "1T15R-6",
+          familia: "Suspensão",
+          quantidade: 3,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Rolamento de Roda Traseira",
+          marca: "TIMKEN",
+          codProduto: "6205-2RS",
+          familia: "Peças",
+          quantidade: 4,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Filtro Separador de Combustível (Racor)",
+          marca: "PARKER",
+          codProduto: "R90-P",
+          familia: "Filtros",
+          quantidade: 8,
+          localizacao: "",
+          alocado: false
+        },
+        {
+          descricao: "Correia do Alternador Poly-V 8PK1635",
+          marca: "GATES",
+          codProduto: "8PK1635",
+          familia: "Correias",
+          quantidade: 5,
           localizacao: "",
           alocado: false
         }

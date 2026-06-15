@@ -1,10 +1,10 @@
 import React from "react";
-import { 
-  LayoutDashboard, 
-  FileInput, 
+import {
+  LayoutDashboard,
+  FileInput,
   PlusCircle,
-  Package, 
-  Wrench, 
+  Package,
+  Wrench,
   BarChart3,
   Factory
 } from "lucide-react";
@@ -46,11 +46,10 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-150 ${
-                isActive
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-150 ${isActive
                   ? "bg-orange-500 text-black shadow-md shadow-orange-500/20 font-bold"
                   : "text-gray-400 hover:text-white hover:bg-gray-900"
-              }`}
+                }`}
             >
               <Icon size={18} className={isActive ? "stroke-[2.5]" : "stroke-[1.8]"} />
               <span>{item.label}</span>

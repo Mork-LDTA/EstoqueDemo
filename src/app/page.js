@@ -137,7 +137,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-950 dark:bg-gray-950 dark:text-gray-50 transition-colors duration-200 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50 text-gray-950 dark:bg-gray-950 dark:text-gray-50 transition-colors duration-200 overflow-hidden">
       {/* Barra de Navegação Lateral */}
       <Sidebar 
         activeTab={activeTab} 
@@ -147,7 +147,7 @@ export default function Home() {
       />
 
       {/* Conteúdo Principal da SPA */}
-      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 p-6 md:p-8 transition-colors duration-200">
+      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 w-full px-4 py-3 pb-24 md:p-8 transition-colors duration-200">
         <div className="max-w-7xl mx-auto">
           {renderTabContent()}
         </div>

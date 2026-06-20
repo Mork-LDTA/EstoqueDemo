@@ -184,10 +184,10 @@ export default function RastrearNF({ movements = [], products = [] }) {
               )}
             </div>
 
-            <div className="flex space-x-2">
+            <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
               <button
                 type="submit"
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-black font-black uppercase text-xs py-3 rounded-lg transition-colors flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
+                className="w-full md:flex-1 bg-orange-500 hover:bg-orange-600 text-black font-black uppercase text-xs py-3.5 md:py-3 rounded-lg transition-colors flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
               >
                 <Search size={14} className="stroke-[3]" />
                 <span>Localizar Itens</span>
@@ -196,9 +196,10 @@ export default function RastrearNF({ movements = [], products = [] }) {
                 <button
                   type="button"
                   onClick={handleLimpar}
-                  className="bg-gray-100 dark:bg-gray-850 hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 p-3 rounded-lg transition-colors flex items-center justify-center border border-gray-250 dark:border-gray-800 cursor-pointer"
+                  className="w-full md:w-auto bg-gray-150 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 py-3.5 md:py-3 px-4 rounded-lg transition-colors flex items-center justify-center border border-gray-250 dark:border-gray-800 cursor-pointer"
                   title="Limpar busca"
                 >
+                  <span className="md:hidden text-xs font-black uppercase mr-2">Limpar Busca</span>
                   <X size={15} />
                 </button>
               )}

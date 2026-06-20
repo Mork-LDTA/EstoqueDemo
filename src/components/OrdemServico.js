@@ -599,7 +599,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   placeholder="Ex: Substituição preventiva"
                   value={aplicacao}
                   onChange={(e) => setAplicacao(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-955 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                   required
                 />
               </div>
@@ -613,7 +613,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   placeholder="Descreva brevemente a necessidade mecânica..."
                   value={problema}
                   onChange={(e) => setProblema(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-955 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                   required
                 ></textarea>
               </div>
@@ -641,13 +641,13 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                       }}
                       onFocus={() => setIsOpen(true)}
                       onBlur={() => setTimeout(() => setIsOpen(false), 250)}
-                      className="w-full bg-white border border-gray-200 text-gray-950 px-3 py-2 pl-3 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
+                      className="w-full bg-white border border-gray-200 text-gray-955 px-4 py-3 pl-4 rounded-xl text-base font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 md:px-3 md:py-2 md:text-sm md:rounded-lg"
                     />
                     {selectedProductId && (
                       <button
                         type="button"
                         onClick={() => { setSelectedProductId(""); setProductSearch(""); setIsOpen(false); }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold cursor-pointer"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm font-bold cursor-pointer md:right-3 md:text-xs"
                       >
                         ✕
                       </button>
@@ -655,9 +655,9 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   </div>
 
                   {isOpen && (
-                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto divide-y divide-gray-100">
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100">
                       {filteredProductsForSelect.length === 0 ? (
-                        <div className="p-3 text-xs text-gray-500 text-center">Nenhum produto correspondente.</div>
+                        <div className="p-4 text-sm text-gray-500 text-center">Nenhum produto correspondente.</div>
                       ) : (
                         filteredProductsForSelect.map((p) => {
                           const isDisabled = p.quantidade <= 0;
@@ -676,14 +676,16 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                                 setProductSearch(`${p.descricao} (${p.marca})`);
                                 setIsOpen(false);
                               }}
-                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex flex-col space-y-0.5 ${isDisabled ? "opacity-40 cursor-not-allowed bg-gray-50" : ""} ${isExactMatch ? "bg-orange-50/70 border-l-4 border-l-orange-500" : ""}`}
+                              className={`w-full text-left px-4 py-3 hover:bg-gray-50 flex flex-col space-y-1 ${isDisabled ? "opacity-40 cursor-not-allowed bg-gray-50" : ""} ${isExactMatch ? "bg-orange-50/70 border-l-4 border-l-orange-500" : ""}`}
                             >
                               <div className="flex justify-between items-center w-full">
-                                <span className="font-bold text-xs text-gray-950">{p.descricao} ({p.marca})</span>
-                                {isExactMatch && <span className="bg-orange-500 text-black text-[8px] font-black uppercase px-1 rounded">Match</span>}
+                                <span className="font-extrabold text-sm text-gray-955">{p.descricao} ({p.marca})</span>
+                                {isExactMatch && <span className="bg-orange-500 text-black text-[8px] font-black uppercase px-1.5 py-0.5 rounded">Match</span>}
                               </div>
-                              <div className="text-[10px] text-gray-500 font-medium">
-                                Ref: <span className="font-mono font-bold text-gray-700">{p.codProduto}</span> • Int: <span className="font-mono font-bold text-gray-700">#{p.codInterno}</span> • Saldo: <span className="font-bold text-gray-900">{p.quantidade} un</span>
+                              <div className="text-xs text-gray-505 font-semibold flex flex-wrap gap-x-2 gap-y-0.5">
+                                <span>Ref: <strong className="font-mono text-gray-700">{p.codProduto}</strong></span>
+                                <span>Int: <strong className="font-mono text-gray-700">#{p.codInterno}</strong></span>
+                                <span>Saldo: <strong className="text-gray-900">{p.quantidade} un</strong></span>
                               </div>
                             </button>
                           );
@@ -698,13 +700,29 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                   <label className="text-xs font-bold text-gray-500 uppercase">
                     Quantidade Retirada
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={quantidade}
-                    onChange={(e) => setQuantidade(e.target.value)}
-                    className="w-full bg-white border border-gray-200 text-gray-950 px-3 py-2 rounded-lg text-sm font-semibold focus:outline-none focus:border-orange-500"
-                  />
+                  <div className="flex items-center space-x-1">
+                    <button
+                      type="button"
+                      onClick={() => setQuantidade(prev => Math.max(1, Number(prev) - 1))}
+                      className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-900 dark:text-white font-black text-lg w-12 h-11 md:w-10 md:h-9 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer flex items-center justify-center select-none active:scale-95 transition-transform"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={quantidade}
+                      onChange={(e) => setQuantidade(e.target.value)}
+                      className="flex-1 min-w-0 text-center bg-white border border-gray-200 text-gray-955 h-11 md:h-9 rounded-lg text-sm font-bold focus:outline-none focus:border-orange-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setQuantidade(prev => Number(prev) + 1)}
+                      className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-900 dark:text-white font-black text-lg w-12 h-11 md:w-10 md:h-9 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer flex items-center justify-center select-none active:scale-95 transition-transform"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -712,19 +730,21 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
               <button
                 type="button"
                 onClick={handleAddToFila}
-                className="w-full bg-gray-950 hover:bg-orange-600 text-white font-bold uppercase text-xs py-2.5 rounded-lg transition-all shadow-sm cursor-pointer"
+                className="w-full bg-gray-950 hover:bg-orange-600 text-white font-bold uppercase text-xs py-3 rounded-xl transition-all shadow-sm cursor-pointer md:py-2.5 md:rounded-lg"
               >
                 + Adicionar Item na OS
               </button>
             </div>
 
-            {/* TABELA TEMPORÁRIA DE CONFERÊNCIA */}
+            {/* TABELA TEMPORÁRIA DE CONFERÊNCIA / CARDS MOBILE */}
             {cartItems.length > 0 && (
-              <div className="space-y-2 animate-in fade-in duration-300">
+              <div className="space-y-3 animate-in fade-in duration-300">
                 <label className="text-xs font-bold text-gray-500 uppercase flex items-center space-x-1.5">
                   <span>Fila de Retirada ({cartItems.length} {cartItems.length === 1 ? "item" : "itens"})</span>
                 </label>
-                <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
+
+                {/* DESKTOP TABLE */}
+                <div className="hidden md:block border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50 text-gray-500 font-bold uppercase">
@@ -738,11 +758,11 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                     <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
                       {cartItems.map((item, idx) => (
                         <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="py-3 px-4 font-bold text-gray-950">{item.descricao}</td>
+                          <td className="py-3 px-4 font-bold text-gray-955">{item.descricao}</td>
                           <td className="py-3 px-4 text-gray-600">{item.marca}</td>
                           <td className="py-3 px-4 text-center font-mono text-gray-500">{item.codProduto}</td>
                           <td className="py-3 px-4 text-center">
-                            <span className="font-extrabold bg-gray-50 border border-gray-200 px-3 py-1 rounded text-gray-950">
+                            <span className="font-extrabold bg-gray-50 border border-gray-200 px-3 py-1 rounded text-gray-955">
                               {item.quantidade}
                             </span>
                           </td>
@@ -752,7 +772,7 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                               onClick={() => {
                                 setCartItems(cartItems.filter((_, i) => i !== idx));
                               }}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
+                              className="p-1.5 text-red-650 hover:bg-red-50 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
                               title="Remover da fila"
                             >
                               <Trash2 size={14} />
@@ -762,6 +782,42 @@ export default function OrdemServico({ products, setProducts, osList, setOsList,
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* MOBILE CARDS LIST */}
+                <div className="block md:hidden space-y-3">
+                  {cartItems.map((item, idx) => (
+                    <div
+                      key={item.id}
+                      className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-center justify-between space-x-4 hover:border-gray-300 transition-colors animate-in slide-in-from-bottom-2 duration-255"
+                    >
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <p className="font-extrabold text-sm text-gray-955 truncate">{item.descricao}</p>
+                        <div className="text-xs text-gray-550 font-semibold flex flex-wrap gap-x-2">
+                          <span>Marca: <strong className="text-gray-700">{item.marca}</strong></span>
+                          <span>Ref: <strong className="font-mono text-gray-700">{item.codProduto}</strong></span>
+                        </div>
+                        <div className="pt-1 flex items-center space-x-1.5">
+                          <span className="text-[10px] font-black text-gray-400 uppercase">Qtd:</span>
+                          <span className="font-extrabold bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded text-xs text-gray-955">
+                            {item.quantidade}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCartItems(cartItems.filter((_, i) => i !== idx));
+                          }}
+                          className="p-3 text-red-650 bg-red-50 hover:bg-red-100 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-95"
+                          title="Remover da fila"
+                        >
+                          <Trash2 size={18} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

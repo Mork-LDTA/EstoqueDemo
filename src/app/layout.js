@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "FX Estoque - Controle de Estoque Inteligente",
   description: "Painel inteligente de controle de estoque industrial para almoxarifados modernos.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({ children }) {
